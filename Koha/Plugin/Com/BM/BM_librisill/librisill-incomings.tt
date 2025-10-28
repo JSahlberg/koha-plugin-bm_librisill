@@ -1,0 +1,298 @@
+[% USE raw %]
+[% USE Asset %]
+[% USE Koha %]
+[% USE KohaDates %]
+[% USE ItemTypes %]
+[% USE Branches %]
+[% USE AuthorisedValues %]
+[% USE TablesSettings %]
+[% PROCESS 'i18n.inc' %]
+[% SET footerjs = 1 %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>Fjärrlån - Förfrågningar från andra bibliotek</title>
+[% INCLUDE 'doc-head-close.inc' %]
+<style> p { margin-top: 0; }</style>
+</head>
+
+<body id="fjarrlan_incomings" class="circ">
+    [% WRAPPER 'header.inc' %]
+        [% INCLUDE 'home-search.inc' %]
+    [% END %]
+
+    <div class="main container-fluid">
+        <div class="row">
+            <div class="col-sm-12">
+                <main>
+                    <div class="row">
+                        <div class="col-md-10 offset-md-1 col-lg-10 offset-lg-1">
+                        
+                            <h1>Fjärrlån - Inkommande förfrågningar från Libris</h3>
+                            
+                            [% INCLUDE "$plugin_dir/ill_toolbar.inc" %]
+                            
+                            [% IF NOT errormessage %]
+                            
+                            <div class="page-section">
+                                
+                                [% IF NOT decoded.count < 1 %]
+
+                                <p><span>Antal förfrågningar: [% decoded.count | html %]</span></p>                            
+                                <table id="ill_incomings_table" class="dataTable ill_table">
+                                    <thead>
+                                        <tr>
+                                        <th>Beställning</th>
+                                        <th>Librisnummer</th>
+                                        <th>Titel</th>
+                                        <th>Bibliotek</th>
+                                        <th>Status</th>
+                                        <th>Plocklapp</th>
+                                        <th>Adresslapp</th>
+                                        [% IF NOT archive %] <th>Behandla</th> [% END %]
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        [% FOREACH ill_request IN decoded.ill_requests.reverse %]            
+                                        <tr>
+                                        <td class="lf_number"><a href="https://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill_request.lf_number %]" target="_blank">[% ill_request.lf_number %]</a></td>
+                                        <td class="bib_id"><a href="https://libris.kb.se/bib/[% ill_request.bib_id %]" target="_blank">[% ill_request.bib_id %]</a></td>
+                                        <td class="ill_title"><a href="/cgi-bin/koha/catalogue/search.pl?q=[% ill_request.bib_id %]" target="_blank">[% ill_request.title %]</a></td>
+                                        <td class="req_library"><a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% ill_request.requesting_library %]">[% ill_request.requesting_library %]</a></td>
+                                        <td class="ill_status">[% ill_request.status %]</td>
+                                        <td style="text-align: center;"><button class="btn btn-xs btn-primary" onclick="window.open('https://iller.libris.kb.se/librisfjarrlan/api/illrequests/[% decoded.library_code %]/[% ill_request.lf_number %]?format=pdf')">Öppna PDF</button></td>
+                                        <td style="text-align: center;"><button class="adresslapplink btn btn-xs btn-primary" data="[% ill_request.requesting_library %]">Skriv ut</button></td>
+                                        [% IF NOT archive %] <td><button class="behandla btn btn-xs btn-success" data-bs-toggle="modal" data-bs-target="#behandlaModal" data="[% ill_request.request_id	%]" timestamp="[% ill_request.last_modified %]">Öppna</a></td> [% END %]
+                                        </tr>
+                                        [% END %]
+                                    </tbody>
+                                </table>
+
+                                [% ELSE %]
+
+                                <p><span>Det finns inga förfrågningar. </span></p>
+
+                                [% END %]
+
+                            </div>
+                            [% ELSE %]
+                            <div class="page-section">
+                                <h3 style="color: red;">Fel: [% errormessage %]</h3>
+                            </div>
+                            [% END %]
+                        
+                        </div> <!-- /.col-sm-10.col-sm-push-2 -->
+                    </div> <!-- /.row -->
+                </main>
+            </div> <!-- /.col-sm-12 -->
+        </div> <!-- /.row -->	
+
+        <div class="modal fade" id="behandlaModal" tabindex="-1" role="dialog" aria-labelledby="behandlaModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="behandlaModalLabel">Behandla fjärrlån</h3>
+                    </div>
+                    <div class="modal-body">
+                        Här kommer informationen om boken som ska behandlas!
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Stäng</button>
+                        <button id="update_ill" type="button" class="btn btn-primary">Skicka</button>
+                    </div>
+                </div>
+            </div>
+        </div>  
+
+<!-- the main div is closed in intranet-bottom.inc -->
+
+[% MACRO jsinclude BLOCK %]
+    [% INCLUDE 'datatables.inc' %]
+    [% INCLUDE 'columns_settings.inc' %]
+    [% INCLUDE "$plugin_dir/librisill_js.inc" %]
+    <script>
+        $('.behandla').on('click', function() {
+            var order_id = $(this).attr('data');
+            var timestamp = $(this).attr('timestamp');
+            $('#behandlaModal .modal-body').html(`
+            <table>
+                <tr>
+                    <td>Beställning:</td>
+                    <td>${$(this).closest('tr').find('.lf_number').text()}</td>
+                </tr>
+                <tr>
+                    <td>Titel:</td>
+                    <td>${$(this).closest('tr').find('.ill_title').text()}</td>
+                </tr>
+                <!--<tr>
+                    <td>Fjärrlånande bibliotek:</td>
+                    <td>${$(this).closest('tr').find('.req_library').text()}</td>
+                </tr>-->        
+            </table>
+            
+            <div id="respondill" class="subfield_line" style="padding-top: 15px;">
+                <label for="response_id">Välj åtgärd:</label>
+                <select id="response_id">
+                    <option value="1">Utlånad</option>
+                    <option value="2">Förkommen</option>
+                    <option value="3">Utlånas ej</option>
+                    <option value="4">Finns ej</option>
+                    <option value="5">F n ej tillgänglig</option>
+                    <option value="6">Ej anländ</option>
+                    <option value="7">Reserverad för er</option>
+                    <option value="8">Övrigt</option>
+                    <option value="9" selected>Levererad</option>
+                </select>
+            </div>
+            <br />
+            <label for="response_text">Meddelande:</label>
+
+            <textarea id="response_text" name="response_text" rows="1" cols="50"></textarea>
+            <div style="padding-top: 15px;">
+                <label class="radio-inline">
+                    <input id="kr2" class="may_reserve_option" type="radio" name="may_reserve" value="1">
+                    Kan reserveras
+                </label>
+                <label class="radio-inline">
+                    <input id="kr1" class="may_reserve_option" type="radio" name="may_reserve" value="0">
+                    Kan inte reserveras
+                </label>
+            </div>
+
+            `);
+
+            var may_reserve;
+
+            $('.may_reserve_option').on('click', function() {
+                may_reserve = $(this).val();
+                console.log(may_reserve);
+            });
+
+            
+            $('#update_ill').on('click', function(e) {
+                e.preventDefault();
+                var selected = $('#response_id :selected').val();
+                var responsetext = $('#response_text').val();
+                
+                var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=librisill_incomings&order_id=${order_id}&branch=[% decoded.library_code %]&action=response&timestamp=${timestamp}&response_id=${selected}&added_response=${responsetext}`;
+        
+                if (may_reserve) {
+                    url += `&may_reserve=${may_reserve}`;
+                }
+                console.log(encodeURI(url));
+                window.location = encodeURI(url);
+
+            });
+            
+        });
+
+
+        
+        $('.adresslapplink').each(function () {
+            var sigel = $(this).attr('data');
+            $(this).on('click', function (event) {
+                event.preventDefault();
+                printDiv(sigel);
+            });
+        });
+    
+
+
+        function printDiv(sigel) {
+
+            $.ajax({
+                type: "GET",
+                cache: true,
+                url: `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=getlibdata&sigel=${sigel}`,
+                success: function (bibinfo) {
+                    //console.log(bibinfo);
+                    const branchinfo = bibinfo.libraries[1];
+                    const sigelinfo = bibinfo.libraries[0];
+                    //console.log(branchinfo);
+                    //console.log(sigelinfo);
+
+                    let printWindow = window.open('', '', 'height=500, width=700');
+                    printWindow.document.open();
+                    printWindow.document.write(`
+                        <html>
+                        <head>
+                            <title>Adresslapp</title>
+                            <style type="text/css">
+                                body { font-family: Arial, sans-serif; }
+                                h1 { color: #333; }
+                                .adresslapp { width: 400px; border: 2px dotted #333 !important; padding: 30px; }
+                                #sender td { color:#888; font-size: small; }
+                                #reciever { padding-top: 30px; padding-left: 180px; }
+                                #reciever td { color:#000; font-size: large; }
+                                @media print {
+                                    .adresslapp { width: 400px; border: 2px dotted #333 !important; padding: 30px; }
+                                    #sender td { color:#888; font-size: small; }
+                                    #reciever { padding-top: 30px; padding-left: 180px; }
+                                    #reciever td { color:#000; font-size: large; }
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="adresslapp">
+                                <span style="float: right; font-size: xx-large;">A-post</span>
+                                <div>
+                                    <table id="sender" style="">
+                                        <tr>
+                                            <td>Avsändare:</td>
+                                        </tr>
+                                        <tr>
+                                            <td>${branchinfo.name}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>${branchinfo.address1}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>${branchinfo.zip_code} ${branchinfo.city}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div>
+                                    <table id="reciever" style="">
+                                        <tr>
+                                            <td style="font-size: small !important;">Mottagare:</td>
+                                        </tr>
+                                        <tr>
+                                            <td>${sigelinfo.name}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>${sigelinfo.address1}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>${sigelinfo.zip_code} ${sigelinfo.city}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                        </body>
+                        </html>
+                    `);
+
+                    //printWindow.document.close();
+                    printWindow.print();
+                    printWindow.close();
+                }
+            });
+        }
+
+  
+        /*
+        function PopupZ3950(fw, bib_id) {
+            var strQuery = GetZ3950Terms(fw);
+            if(strQuery){
+            window.open("/cgi-bin/koha/cataloguing/z3950_search.pl?biblionumber=0&stdid=" + bib_id + "&z3950_1=1&op=do_search&id=1","z3950search",'width=800,height=500,location=yes,toolbar=no,scrollbars=yes,resize=yes');
+            }
+        }
+
+        function GetZ3950Terms(fw){
+            var strQuery="&frameworkcode=" + fw;
+            return strQuery;
+        }
+        */
+    </script>
+    [% END %]
+
+[% INCLUDE 'intranet-bottom.inc' %]

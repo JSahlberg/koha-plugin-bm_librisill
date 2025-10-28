@@ -1,0 +1,100 @@
+[% USE raw %]
+[% USE Asset %]
+[% USE Koha %]
+[% USE KohaDates %]
+[% USE ItemTypes %]
+[% USE Branches %]
+[% USE AuthorisedValues %]
+[% USE TablesSettings %]
+[% PROCESS 'i18n.inc' %]
+[% SET footerjs = 1 %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>Borttagna fjärrlån</title>
+[% INCLUDE 'doc-head-close.inc' %]
+<style> p { margin-top: 0; }</style>
+</head>
+
+<body id="deleted_ill" class="circ">
+    [% WRAPPER 'header.inc' %]
+        [% INCLUDE 'home-search.inc' %]
+    [% END %]    
+        
+<div class="main container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <main>
+                <div class="row">
+                    <div class="col-md-10 offset-md-1 col-lg-10 offset-lg-1">
+
+                        <h1>Borttagna fjärrlån</h1>
+                        
+                        [% INCLUDE "$plugin_dir/ill_toolbar.inc" %]
+                        
+                        <div class="page-section">
+
+                            [% IF ( total > 0 ) %]
+
+                            <p><span>Antal borttagna: [% total | html %]</span></p>                            
+
+                            <table id="deletedill_table" class="dataTable ill_table">
+                                <thead>
+                                    <tr>
+                                        <th>Datum borttagen</th>
+                                        <th>Skapad</th>
+                                        <th>Senast sedd</th>
+                                        <th>Författare</th>
+                                        <th>Titel</th>
+                                        <th>Antal utlån</th>
+                                        <th>Streckkod</th>
+                                        <th>Notering</th>
+                                        <th>Notering - Icke publik</th>                                        
+                                    </tr>
+                                </thead>
+                                                
+                                <tbody>
+                                [% FOREACH ill IN ill_mappings %]
+                                    <tr>
+                                        <td class="ill_timestamp">[% ill.timestamp | html %]</td>
+                                        <td class="ill_dateaccessioned">[% ill.dateaccessioned | html %]</td>
+                                        <td class="ill_datelastseen">[% ill.datelastseen | html %]</td>
+                                        <td class="ill_author">[% ill.author | html %]</td>
+                                        <td class="ill_title">[% ill.title | html %]</td>
+                                        <td class="ill_issues">[% ill.issues | html %]</td>
+                                        <td class="ill_barcode">[% ill.barcode | html %]</td>
+                                        <td class="ill_itemnotes">[% ill.itemnotes | html %]</td>
+                                        <td class="ill_itemnotes_nonpublic">[% ill.itemnotes_nonpublic | html %]</td>                                        
+                                    </tr>                    
+                                [% END %]
+                                </tbody>
+                            </table>
+
+                            [% ELSE %]
+
+                            <p><span>Det finns inga aktuella utlån. </span></p>
+
+                            [% END %]
+        
+                        </div>
+                    </div> <!-- /.col-sm-10.col-sm-push-2 -->
+                </div> <!-- /.row -->
+            </main>
+        </div> <!-- /.col-sm-12 -->
+    </div> <!-- /.row -->
+
+<!-- the main div is closed in intranet-bottom.inc -->
+    
+
+[% MACRO jsinclude BLOCK %]
+    [% INCLUDE 'datatables.inc' %]
+    [% INCLUDE 'columns_settings.inc' %]
+
+    [% INCLUDE "$plugin_dir/librisill_js.inc" %]
+    <script>
+        
+
+        
+
+    </script>
+[% END %]
+
+[% INCLUDE 'intranet-bottom.inc' %]

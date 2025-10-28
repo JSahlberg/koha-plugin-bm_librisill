@@ -1,0 +1,295 @@
+[% USE raw %]
+[% USE Asset %]
+[% USE Koha %]
+[% USE KohaDates %]
+[% USE ItemTypes %]
+[% USE Branches %]
+[% USE AuthorisedValues %]
+[% USE TablesSettings %]
+[% PROCESS 'i18n.inc' %]
+[% SET footerjs = 1 %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>Fjärrlån - Beställningar</title>
+[% INCLUDE 'doc-head-close.inc' %]
+<style> p { margin-top: 0; }</style>
+</head>
+
+<body id="search_ill" class="circ">
+    [% WRAPPER 'header.inc' %]
+        [% INCLUDE 'home-search.inc' %]
+    [% END %]
+        
+<div class="main container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <main>
+                <div class="row">
+                    <div class="col-md-10 offset-md-1 col-lg-10 offset-lg-1">
+
+                        <h1>Fjärrlåneförfrågningar</h1>
+
+                        [% INCLUDE "$plugin_dir/ill_toolbar.inc" %]
+                        
+                        <div class="page-section">
+
+                            [% IF ( total > 0 ) %]
+
+                            <p><span>Antal förfrågningar: [% total | html %]</span></p>                            
+
+                            <table id="ill_search_table" class="dataTable ill_table">
+                                <thead>
+                                    <tr>
+                                        <th>Skapad</th>
+                                        <th>Titel</th>
+                                        <th>Författare</th>
+                                        <th>Libris fjärrlån</th>
+                                        <th>Reserverad av</th>
+                                        <th>Aktivt bibliotek</th>
+                                        <th>Status</th>
+                                        <th>Ankomstregistrera</th>
+                                        <th>Radera</th>
+                                    </tr>
+                                </thead>
+                                                
+                                <tbody>
+                                [% FOREACH ill IN ill_mappings %]
+                                    <tr>
+                                        <td class="ill_dateaccessioned">[% ill.dateaccessioned | html %]</td>
+                                        <td class="ill_title"><a href="/cgi-bin/koha/catalogue/detail.pl?biblionumber=[% ill.biblionumber | html %]" target="_blank">[% ill.title | html %]</a></td>
+                                        <td class="ill_author">[% ill.author | html %]</td>
+                                        <td class="ill_id"><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill.ill_id | html %]" target="_blank">[% ill.ill_id | html %]</a></td>
+                                        <td class="ill_borrowername">[% IF ( ill.borrowernumber ) %]<a href="/cgi-bin/koha/circ/circulation.pl?borrowernumber=[% ill.borrowernumber | html %]">[% ill.surname | html %], [% ill.firstname | html %][% ELSE %]Saknas[% END %]</a></td>
+                                        <td class="ill_active_library">
+                                        [% FOREACH il IN ill_requests %]
+                                            [% IF ( il.lf_number == ill.ill_id ) %]
+                                                [% FOREACH lib IN ill_libraries %]
+                                                    [% IF lib.sigel == il.active_library %]
+                                                        <a href="https://biblioteksdatabasen.libris.kb.se/library/[% lib.library_id %]/" target="_blank">[% lib.sigel %] - [% lib.libraryname %]</a>
+                                                    [% END %]
+                                                [% END %]
+                                            [% END %]                                                
+                                        [% END %]</td>
+                                        <td class="ill_status">
+                                        [% FOREACH il IN ill_requests %]
+                                            [% IF ( il.lf_number == ill.ill_id ) %]
+                                                <b>[% il.status | html %]</b> <!--(<span class="active_library">[% il.active_library %]</span>)-->
+                                                [% FOREACH rec IN il.recipients %]
+                                                    [% IF ( rec.is_active_library ) %]
+                                                        [% rec.response_date | html %]
+                                                    [% END %]
+                                                [% END %]
+                                            [% END %]
+                                        [% END %]</td>
+                                        <!-- <td style="text-align: center;"><a class="btn btn-default btn-xs" href="/cgi-bin/koha/cataloguing/additem.pl?op=edititem&biblionumber=[% ill.biblionumber | html %]&itemnumber=[% ill.itemnumber | html %]#edititem" target="_blank">Lägg in</a></td> -->
+                                        <td style="text-align: center;"><button class="behandla btn btn-xs btn-primary" data-bs-toggle="modal" data-bs-target="#behandlaModal" ill_id="[% ill.ill_id | html %]" itemnumber="[% ill.itemnumber | html %]" barcode="[% ill.barcode | html %]" itemnotes="[% ill.itemnotes | html %]">Behandla</button></td>
+                                        <td style="text-align: center;"><button class="delete_ill btn btn-xs btn-danger" biblionumber="[% ill.biblionumber | html %]" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Ta bort</button></td>
+                                    </tr>                    
+                                [% END %]
+                                </tbody>
+                            </table>
+
+                            [% ELSE %]
+
+                            <p><span>Det finns inga aktuella förfrågningar. </span></p>  
+
+                            [% END %]
+        
+                        </div>
+                        [% IF errormessage %]
+                        <div class="page-section">
+                            <h3 style="color: red;">Fel: [% errormessage %]</h3>
+                        </div>
+                        [% END %]
+                        
+
+                    </div> <!-- /.col-sm-10.col-sm-push-2 -->
+                            
+                </div> <!-- /.row -->
+
+            </main>
+        </div> <!-- /.col-sm-12 -->
+    </div> <!-- /.row -->
+
+    
+    <div class="modal modal-lg fade" id="behandlaModal" tabindex="-1" role="dialog" aria-labelledby="behandlaModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="behandlaModalLabel">Behandla fjärrlån</h3>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="itemnumber" class="itemnumber" value="">
+                    <input type="hidden" name="active_library" class="active_library" value="">
+                    <input type="hidden" name="ill_id" class="ill_id" value="">
+
+                    <fieldset class="rows">
+                        <ol>
+                            <li>
+                                <label>Beställning:</label>
+                                <span style="color: green;"><b class="modal_ill_id"></b></span>
+                            </li>
+                            <li>
+                                <label>Titel:</label>
+                                <span class="modal_title"></span>
+                            </li>
+                            <li>
+                                <label>Författare:</label>
+                                <span class="modal_author"></span>
+                            </li>
+                            <li style="padding-top: 30px;">
+                                <label>Notering:</label>
+                                <input name="itemnotes" class="itemnotes" type="text" maxlength="9999" value="" autofocus>
+                            </li>
+                            <li>
+                                <label>Streckkod:</label>
+                                <input name="barcode" class="ill_barcode" type="text" maxlength="9999" value="">
+                            </li>
+                        </ol>    
+                    </fieldset>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Stäng</button>
+                    <button id="update_ill" type="button" class="btn btn-primary">Lägg in</button>
+                </div>
+            </div>
+        </div>
+    </div> 
+
+
+[% MACRO jsinclude BLOCK %]
+    [% INCLUDE 'datatables.inc' %]
+    [% INCLUDE 'columns_settings.inc' %]
+    [% INCLUDE "$plugin_dir/librisill_js.inc" %]
+    <script>
+        $('.behandla').on('click', function() {
+
+            $('#behandlaModal .itemnumber').val( $(this).attr('itemnumber') );
+            $('#behandlaModal .active_library').val( $(this).closest('tr').find('.active_library').text() );
+            $('#behandlaModal .ill_id').val( $(this).attr('ill_id') );
+            $('#behandlaModal .modal_ill_id').text( $(this).attr('ill_id') );
+            $('#behandlaModal .modal_title').text( $(this).closest('tr').find('.ill_title').text() );
+            $('#behandlaModal .modal_author').text( $(this).closest('tr').find('.ill_author').text() );
+            $('#behandlaModal .itemnotes').val( $(this).attr('itemnotes') );
+            $('#behandlaModal .ill_barcode').val( $(this).attr('barcode') );
+                    
+        });
+
+        $('#behandlaModal').on('shown.bs.modal', function (e) {
+            $('#behandlaModal .itemnotes').focus();
+        });
+
+        $('#update_ill').on('click', function(e) {
+            e.preventDefault();
+
+            var itemnumber = $('#behandlaModal').find('.itemnumber').val();
+            var itemnotes = $('#behandlaModal').find('.itemnotes').val();
+            var ill_id = $('#behandlaModal').find('.ill_id').val();
+            var active_library = $('#behandlaModal').find('.active_library').val();
+            var barcode = $('#behandlaModal').find('.ill_barcode').val();
+            
+            var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=save_ILL&itemnumber=${itemnumber}&itemnotes=${itemnotes}&ill_id=${ill_id}&barcode=${barcode}&active_library=${active_library}`;
+    
+            console.log(encodeURI(url));
+
+            $.ajax({
+                url: `${url}`,
+                contentType: "application/json;charset=UTF-8",
+                cache: true,
+                }).done(function (data) {
+                    if ( data.error == '0' ) {
+
+                        $('.behandla').each(function() {
+                            if ( $(this).attr('ill_id') == ill_id ) {
+                                $(this).closest('td').html('Inlagd!');
+                            }
+                        })
+                        $('#behandlaModal .modal-body').html(`
+                            <h2>Uppdaterad!</h2>                            
+                        `);
+                        $('#behandlaModal .modal-footer').prepend(`
+                            <form method="post" action="/cgi-bin/koha/circ/returns.pl" autocomplete="off">
+                                <input type="hidden" name="op" value="cud-checkin">
+                                [% INCLUDE 'csrf-token.inc' %]
+                                <input id="ret_barcode" type="hidden" name="barcode" value="${barcode}">
+                                <button class="btn btn-primary" id="checkin_ill" type="submit">Skriv ut kvitto</button>
+                            </form>
+                        `);
+                        $('#checkin_ill').focus();
+                        $('#update_ill').remove();
+                    } else {
+                        $('#behandlaModal .modal-body').html(`
+                            <h2>Ej uppdaterad!</h2>
+                            <span>Fel uppstod...</span>
+                        `);
+                        $('#update_ill').remove();
+                    }
+            });
+        });
+
+
+        $('.delete_ill').on('click', function(e) {
+
+            if ( confirm('Är du helt säker att du vill ta bort detta fjärrlån och reservation?')) {
+
+                var biblionumber = $(this).attr('biblionumber');
+                var itemnumber = $(this).attr('itemnumber');
+                var borrowernumber = $(this).attr('borrowernumber');
+
+                var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=delete_ILL&biblionumber=${biblionumber}&itemnumber=${itemnumber}&borrowernumber=${borrowernumber}`;
+
+                $.ajax({
+                    url: `${url}`,
+                    contentType: "application/json;charset=UTF-8",
+                    cache: true,
+                }).done(function (data) {
+                    if ( data.error == '0' ) {                        
+                        console.log('Borttagen!');
+                        window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=searchILL';
+                    } else {
+                        alert('Fel: Gick inte att ta bort.');
+                    }
+                });
+            }
+        });
+
+        $(document).ready(function() {
+            
+            $('.ill_status').each(function() {
+                if ($(this).html().includes('Levererad')) {
+                    $(this).attr('style', 'background-color:rgb(204, 255, 200) !important');
+                } else if ($(this).html().includes('Negativ')) {
+                    $(this).attr('style', 'background-color:#ffc8c8 !important');                    
+                } else if ($(this).html().includes('Reserverad')) {
+                    $(this).attr('style', 'background-color:rgb(255, 239, 200) !important');                    
+                }
+            });
+
+            // Setup filters before DataTables initialisation, in case some columns are
+            // hidden by default
+            
+            /*
+            var ill_table;
+            var filterColumnTimeoutId;
+            var filterColumn = function(e) {
+                clearTimeout(filterColumnTimeoutId);
+                filterColumnTimeoutId = setTimeout(function() {
+                    var input = $(e.target);
+                    var idx = input.parents('td').index();
+                    ill_table.api().column(idx + ':visible').search(input.val()).draw();
+                }, 200);
+            };
+            $('#ill_table thead input').on('change keyup keydown', filterColumn);
+            
+            var table_settings = [% TablesSettings.GetTableSettings('circ', 'view_holdsqueue', 'holds-table', 'json') | $raw %];
+            var ill_table = KohaTable("ill_table", {
+                "dom": 'B<"clearfix">t',
+                "orderCellsTop":  true,
+                "paginate": false
+            }, table_settings);
+            
+            */
+        });
+    </script>
+[% END %]
+
+[% INCLUDE 'intranet-bottom.inc' %]

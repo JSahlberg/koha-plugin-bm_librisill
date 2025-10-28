@@ -1,0 +1,170 @@
+[% USE raw %]
+[% USE Asset %]
+[% USE Koha %]
+[% USE KohaDates %]
+[% USE ItemTypes %]
+[% USE Branches %]
+[% USE AuthorisedValues %]
+[% USE TablesSettings %]
+[% PROCESS 'i18n.inc' %]
+[% SET footerjs = 1 %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>Fjärrlånestatus för [% decoded.ill_requests.0.lf_number %]</title>
+[% INCLUDE 'doc-head-close.inc' %]
+<style> p { margin-top: 0; }</style>
+</head>
+
+<body id="fjarrlan_request" class="circ">
+  [% WRAPPER 'header.inc' %]
+      [% INCLUDE 'home-search.inc' %]
+  [% END %]
+
+  <div class="main container-fluid">
+    <div class="row">
+      <div class="col-sm-12">
+        <main>
+          <div class="row">
+            <div class="col-md-10 offset-md-1 col-lg-10 offset-lg-1">
+              <h1>Fjärrlånestatus för [% decoded.ill_requests.0.lf_number %]</h1>
+              [% INCLUDE "$plugin_dir/ill_toolbar.inc" %]
+              <div class="page-section" style="max-width: 700px;">
+                <table class="table table-hover table-light">
+                  <tr>
+                    <td>Beställningsnummer:</td>
+                    <td><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% decoded.ill_requests.0.lf_number %]" target="_blank">[% decoded.ill_requests.0.lf_number %]</a></td>  
+                  </tr>
+                  <tr>
+                    <td>Titel:</td>
+                    <td>[% decoded.ill_requests.0.title %]</td>  
+                  </tr>
+                  <tr>
+                    <td>Författare:</td>
+                    <td>[% decoded.ill_requests.0.author %]</td>  
+                  </tr>
+                  <tr>
+                    <td>Utgivning:</td>
+                    <td>[% decoded.ill_requests.0.imprint %]</td>  
+                  </tr>
+                  <tr>
+                    <td>ISBN/ISSN:</td>
+                    <td>[% decoded.ill_requests.0.isbn_issn %]</td>  
+                  </tr>
+                  <tr>
+                    <td>Libris-ID:</td>
+                    <td>[% decoded.ill_requests.0.bib_id %]</td>  
+                  </tr>
+                  <tr>
+                    <td>Aktivt bibliotek:</td>
+                    <td>[% decoded.ill_requests.0.active_library %]</td>  
+                  </tr>
+                  <tr>
+                    <td>Remisskedja:</td>
+                    <!--<td>[% FOREACH library IN library_codes %]( [% library.library_code %] ) [% END %]</td>-->
+                    <td>[% library_codes %]</td> 
+                  </tr>
+                  <tr>
+                    <td>Låntagare:</td>
+                    <td class="user">[% IF patron.surname.length > 0 %][% patron.surname %], [% patron.firstname %] [% ELSE %] (ej angivet) [% END %] [% IF patron.borrowernumber.length > 0 %]([% patron.borrowernumber %])[% ELSIF decoded.ill_requests.0.user_id > 0 %]<i style="color:#d00">(Ej registrerad låntagare)</i> [% END %]</td>  
+                  </tr>
+                  <tr>
+                    <td>Lånekortsnummer:</td>
+                    <td class="user_id">[% decoded.ill_requests.0.user_id %]</td>  
+                  </tr>
+                </table>
+              </div>
+              <p>
+                [% IF patron.borrowernumber.length > 0 %]<a class="btn btn-primary" href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% decoded.ill_requests.0.user_id %]" target="_blank">Visa låntagare</a>[% END %]
+                [% IF decoded.ill_requests.0.bib_id.length > 0 %]<a bib_id="[% decoded.ill_requests.0.bib_id %]" borrower="[% decoded.ill_requests.0.user_id %]" class="btn btn-primary import" >Importera[% IF patron.borrowernumber.length > 0 %] och reservera[% END %]</a>[% END %]
+              </p>
+            </div> <!-- /.col-sm-10.col-sm-push-2 -->
+          </div> <!-- /.row -->
+        </main>
+      </div> <!-- /.col-sm-12 -->
+    </div> <!-- /.row -->
+<!-- the main div is closed in intranet-bottom.inc -->
+
+    <div id="importSubmittedModal" class="modal" tabindex="-1" role="dialog" aria-labelledby="importSubmittedModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title" id="importSubmittedModalLabel">Import av post</h1>
+          </div>
+          <div class="modal-body">
+            <p>Import pågår...</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Stäng</button>            
+          </div>
+        </div> <!-- /.modal-content -->
+      </div> <!-- /.modal-dialog -->
+    </div>
+
+[% MACRO jsinclude BLOCK %]
+  [% INCLUDE 'datatables.inc' %]
+  [% INCLUDE 'columns_settings.inc' %]
+  [% INCLUDE "$plugin_dir/librisill_js.inc" %]
+
+  <script>
+
+      /*
+      $('.import').each(function () {
+          $(this).click(function (event) {
+              event.preventDefault();
+              var illjson = [% ill_JSON %];    
+              localStorage.setItem('latest_ill', JSON.stringify(illjson));
+              PopupZ3950("", $(this).attr('data'));
+              return false;
+          });
+      });
+      */
+
+      $('.import').each(function () {
+          $(this).click(function (event) {
+              event.preventDefault();
+              
+              var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=import_ill&bib_id=[% decoded.ill_requests.0.bib_id %]&borrowernumber=[% patron.borrowernumber %]&ill_id=[% decoded.ill_requests.0.lf_number %]`;
+
+              $('#importSubmittedModal').modal('show');
+
+              $.ajax({
+                url: `${url}`,
+                contentType: "application/json;charset=UTF-8",
+                cache: true,
+              }).done(function (data) {
+                if (data.error == 1) {
+                  $('#importSubmittedModal .modal-body').html('<p style="color: red;">Import misslyckades...</p>');                  
+                } else {
+                  if ( data.no_borrower ) {
+                    $('#importSubmittedModal .modal-body').html('<p style="color: green;">Import genomförd!</p><p>Låntagare saknas, ingen reservation gjord.</p>');                  
+                    const importmodal = document.getElementById('importSubmittedModal')
+                    importmodal.addEventListener('hidden.bs.modal', event => {
+                      window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=searchILL';
+                    });                  
+                  } else {
+                    $('#importSubmittedModal .modal-body').html('<p style="color: green;">Import och reservation genomförd!</p>');                  
+                    const importmodal = document.getElementById('importSubmittedModal')
+                    importmodal.addEventListener('hidden.bs.modal', event => {
+                      window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=searchILL';
+                    });                  
+                  }                  
+                }
+              });
+          });
+      });
+
+      function PopupZ3950(fw) {
+          var strQuery = GetZ3950Terms(fw);
+          if(strQuery){
+          window.open("/cgi-bin/koha/cataloguing/z3950_search.pl?biblionumber=0&stdid=[% decoded.ill_requests.0.bib_id %]&z3950_1=1&op=do_search&id=1","z3950search",'width=800,height=500,location=yes,toolbar=no,scrollbars=yes,resize=yes');
+          }
+      }
+
+      function GetZ3950Terms(fw){
+          var strQuery="&frameworkcode=" + fw;
+          return strQuery;
+      }
+
+  </script>
+[% END %]
+
+[% INCLUDE 'intranet-bottom.inc' %]

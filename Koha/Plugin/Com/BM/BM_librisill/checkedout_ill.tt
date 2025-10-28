@@ -1,0 +1,163 @@
+[% USE raw %]
+[% USE Asset %]
+[% USE Koha %]
+[% USE KohaDates %]
+[% USE ItemTypes %]
+[% USE Branches %]
+[% USE AuthorisedValues %]
+[% USE TablesSettings %]
+[% PROCESS 'i18n.inc' %]
+[% SET footerjs = 1 %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>Fjärrlån - Beställningar</title>
+[% INCLUDE 'doc-head-close.inc' %]
+<style> p { margin-top: 0; }</style>
+</head>
+
+<body id="checkedout_ill" class="circ">
+    [% WRAPPER 'header.inc' %]
+        [% INCLUDE 'home-search.inc' %]
+    [% END %]    
+        
+<div class="main container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <main>
+                <div class="row">
+                    <div class="col-md-10 offset-md-1 col-lg-10 offset-lg-1">
+
+                        <h1>Utlånade fjärrlån</h1>
+                        
+                        [% INCLUDE "$plugin_dir/ill_toolbar.inc" %]
+                        
+                        [% IF ( total > 0 ) %]
+                        <div class="page-section">
+
+                            <p><span>Antal utlån: [% total | html %]</span></p>                            
+
+                            <table id="coill_table" class="dataTable ill_table">
+                                <thead>
+                                    <tr>
+                                        <th>Skapad</th>
+                                        <th>Titel</th>
+                                        <th>Författare</th>
+                                        <th>Libris fjärrlån</th>
+                                        <th>Utlånad till</th>
+                                        <th>Återlämningsdatum</th>
+                                        <th>Omlånad</th>
+                                        <th>Utlånande bibliotek</th>
+                                        <th>Status</th>
+                                        <th>Redigera</th>
+                                    </tr>
+                                </thead>
+                                                
+                                <tbody>
+                                [% FOREACH ill IN ill_mappings %]
+                                    <tr>
+                                        <td class="ill_dateaccessioned">[% ill.dateaccessioned | html %]</td>
+                                        <td class="ill_title"><a href="/cgi-bin/koha/catalogue/detail.pl?biblionumber=[% ill.biblionumber | html %]" target="_blank">[% ill.title | html %]</a></td>
+                                        <td class="ill_author">[% ill.author | html %]</td>
+                                        <td class="ill_id"><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill.ill_id | html %]" target="_blank">[% ill.ill_id | html %]</a></td>
+                                        <td class="ill_borrowername"><a href="/cgi-bin/koha/circ/circulation.pl?borrowernumber=[% ill.borrowernumber | html %]">[% ill.surname | html %], [% ill.firstname | html %]</a></td>
+                                        <td class="ill_duedate" style="text-align: center;">[% USE String( ill.date_due ) %][% String.truncate(10) %]</td>
+                                        <td class="ill_renewals_count" style="text-align: center;">[% ill.renewals_count %]</td>
+                                        <td class="ill_active_library">
+                                        [% FOREACH il IN ill_requests %]
+                                            [% IF ( il.lf_number == ill.ill_id ) %]
+                                                [% FOREACH lib IN ill_libraries %]
+                                                    [% IF lib.sigel == il.active_library %]
+                                                        <a href="https://biblioteksdatabasen.libris.kb.se/library/[% lib.library_id %]/" target="_blank">[% lib.sigel %] - [% lib.libraryname %]</a>
+                                                    [% END %]
+                                                [% END %]
+                                            [% END %]                                                
+                                        [% END %]</td>
+                                        <td class="ill_status">
+                                        [% FOREACH il IN ill_requests %]
+                                            [% IF ( il.lf_number == ill.ill_id ) %]
+                                                <b>[% il.status | html %]</b> <!--(<span class="active_library">[% il.active_library %]</span>)-->
+                                                [% FOREACH rec IN il.recipients %]
+                                                    [% IF ( rec.is_active_library ) %]
+                                                        [% rec.response_date | html %]
+                                                    [% END %]
+                                                [% END %]
+                                            [% END %]
+                                        [% END %]</td>
+                                        <!-- <td style="text-align: center;"><a class="btn btn-default btn-xs" href="/cgi-bin/koha/cataloguing/additem.pl?op=edititem&biblionumber=[% ill.biblionumber | html %]&itemnumber=[% ill.itemnumber | html %]#edititem" target="_blank">Lägg in</a></td> -->
+                                        <td style="text-align: center;"><button class="btn btn-xs btn-primary" onclick="window.open('/cgi-bin/koha/cataloguing/additem.pl?op=edititem&biblionumber=[% ill.biblionumber %]&itemnumber=[% ill.itemnumber %]#edititem')">Redigera</button></td>
+                                    </tr>                    
+                                [% END %]
+                                </tbody>
+                            </table>
+
+                            [% ELSE %]
+
+                            <p><span>Det finns inga aktuella utlån. </span></p>
+
+                        </div>
+                        [% END %]
+                        [% IF errormessage %]
+                        <div class="page-section">
+                            <h3 style="color: red;">Fel: [% errormessage %]</h3>
+                        </div>
+                        [% END %]
+                    </div> <!-- /.col-sm-10.col-sm-push-2 -->
+                </div> <!-- /.row -->
+            </main>
+        </div> <!-- /.col-sm-12 -->
+    </div> <!-- /.row -->
+
+<!-- the main div is closed in intranet-bottom.inc -->
+    
+
+[% MACRO jsinclude BLOCK %]
+    [% INCLUDE 'datatables.inc' %]
+    [% INCLUDE 'columns_settings.inc' %]
+    [% INCLUDE "$plugin_dir/librisill_js.inc" %]
+    <script>
+        
+
+        $(document).ready(function() {
+
+            
+            $('.ill_status').each(function() {
+                if ($(this).html().includes('Levererad')) {
+                    $(this).attr('style', 'background-color:rgb(204, 255, 200) !important');
+                } else if ($(this).html().includes('Negativ')) {
+                    $(this).attr('style', 'background-color:#ffc8c8 !important');                    
+                } else if ($(this).html().includes('Reserverad')) {
+                    $(this).attr('style', 'background-color:rgb(255, 239, 200) !important');                    
+                }
+            });
+
+            // Setup filters before DataTables initialisation, in case some columns are
+            // hidden by default
+            
+            /*
+            var ill_table;
+            var filterColumnTimeoutId;
+            var filterColumn = function(e) {
+                clearTimeout(filterColumnTimeoutId);
+                filterColumnTimeoutId = setTimeout(function() {
+                    var input = $(e.target);
+                    var idx = input.parents('td').index();
+                    ill_table.api().column(idx + ':visible').search(input.val()).draw();
+                }, 200);
+            };
+            $('#ill_table thead input').on('change keyup keydown', filterColumn);
+            
+            var table_settings = [% TablesSettings.GetTableSettings('circ', 'view_holdsqueue', 'holds-table', 'json') | $raw %];
+            var ill_table = KohaTable("ill_table", {
+                "dom": 'B<"clearfix">t',
+                "orderCellsTop":  true,
+                "paginate": false
+            }, table_settings);
+            
+            */
+        });
+
+        console.log('[% plugin_dir %]');
+
+    </script>
+[% END %]
+
+[% INCLUDE 'intranet-bottom.inc' %]

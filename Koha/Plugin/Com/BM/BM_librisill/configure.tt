@@ -1,0 +1,76 @@
+[% USE raw %]
+[% USE Asset %]
+[% USE KohaDates %]
+[% SET footerjs = 1 %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>Koha: bm_librisill: Konfiguration</title>
+[% INCLUDE 'doc-head-close.inc' %]
+
+<body>
+[% INCLUDE 'header.inc' %]
+[% INCLUDE 'cat-search.inc' %]
+[% PERL %]
+use Data::Dumper;
+$stash->set('hkey' => sub { return $_[0]->{$_[1]} });
+$stash->set('dump' => sub { return Dumper($_[0]) });
+$stash->set('defined' => sub { return defined $_[0]; });
+[% END %]
+[% BLOCK select %]
+<select name="[% name %]"[% IF defined(id) && id != '' %] id="[% id %]"[% END %][% IF defined(class) %] class="form-control[% IF defined(class) && class != '' %] [% class %][% END %]"[% END %][% IF required %]required[% END %]>
+  [% IF emptyval %]
+  <option value="" [% IF empty(value) %]selected="selected"[% END %]>[% IF defined(emptylabel) %][% emptylabel | html %][% ELSE %][% emptyval | html %][% END %]</option>
+  [% END %]
+  [% FOREACH item IN list %]
+  <option value="[% hkey(item, valuekey) | html %]" [% IF value == hkey(item, valuekey) %]selected="selected"[% END %]>[% hkey(item, labelkey) | html %]</option>
+  [% END %]
+</select>
+[% END %]
+
+<div class="main container-fluid">
+  <div class="row">
+    <div class="col-sm-10 col-sm-push-2">
+      <main class="page-section">
+        <div class="row">
+            <div class="col-xs-12">
+                <h3>Koha:  BM_librisill : Konfiguration</h3>                
+            </div>
+        </div>
+        <div class="row">
+          <form method="GET">
+            <div class="col-xs-12 col-sm-6 form-group">
+              <input type="hidden" name="class" value="[% CLASS %]">
+              <input type="hidden" name="method" value="[% METHOD %]">
+              <input type="hidden" name="save" value="1">
+              <input type="hidden" name="token" value="[% token %]">
+              [% IF csrf_check %][% INCLUDE 'csrf-token.inc' %][% END %]
+                            
+              <div id="apikeys-container">
+                <label for="apikeys">API-nycklar för varje sigel: </label>
+                <textarea id="apikeys" name="apikeys" rows="15" cols="80" placeholder="Fyll i så här-> sigel : apinyckel">[% apikeys %]</textarea>
+              </div>
+
+              <div id="default-values-template" class="form-group">
+                <hr>
+                <dl class="form-input">
+                  <dt><label data-for="default-itemtype">Exemplartyp:</label></dt>
+                  <dd>[% PROCESS select list=itemtypes id=undef name="default-itemtype" value=ill_itemtype emptyval=1 emptylabel="Välj..." valuekey="itemtype" labelkey="description" required=0 %]</dd>
+                  <dt><label data-for="default-ccode">Avdelning:</label></dt>
+                  <dd>[% PROCESS select list=ccodeav id=undef name="default-ccode" value=ill_ccode emptyval=1 emptylabel="Välj..." valuekey="authorised_value" labelkey="lib" required=0 %]</dd>
+                  <dt><label data-for="default-location">Lokal placering:</label></dt>
+                  <dd>[% PROCESS select list=locav id=undef name="default-location" value=ill_loc emptyval=1 emptylabel="Välj..." valuekey="authorised_value" labelkey="lib" required=0 %]</dd>
+                  <dt><label data-for="default-notforloan">Status:</label></dt>
+                  <dd>[% PROCESS select list=notforloanav id=undef name="default-notforloan" value=ill_notforloan emptyval="Välj..." valuekey="authorised_value" labelkey="lib" required=0 %]</dd>
+              </dl>
+                </dl>
+                  <hr>
+              </div>
+
+            </div>
+            <input type="submit" value="Spara" />
+          </form>
+        </div>
+    </div>
+  </div>  
+</div>
+
+[% INCLUDE 'intranet-bottom.inc' %]
