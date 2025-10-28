@@ -1,15 +1,15 @@
-Custom ILL module for Koha and Libris (For Swedish Libraries only)
+# Custom ILL module for Koha and Libris (For Swedish Libraries only)
 
-Installation:
+## Installation:
 
 1. Gå till Koha-administration
 2. Gå till Hantera plugins
 3. Klicka på Ladda upp plugin
 4. Välj KPZ-filen för pluginen och klicka på Ladda upp.
 
-Konfigurering:
+## Konfigurering:
 
-Hämta bibliotekets API-nycklar från Libris:
+### Hämta bibliotekets API-nycklar från Libris:
 
 1. Logga in på ditt bibliotek på sidan: https://iller.libris.kb.se/librisfjarrlan/lf.php
 2. Gå till Inställningar
@@ -22,8 +22,14 @@ Hämta bibliotekets API-nycklar från Libris:
 9. Om ni är fler bibliotek i eran Koha så fortsätt klistra in sigel och API-nycklar på var sin ny rad.
 
 
-Placeringar och status:
+### Placeringar och status:
 
 1.  Välj de Exemplartyper, Lokala placeringar, Avdelningar och den Status som ni använder för att markera ett fjärrlån i erat system.
 2.  Klicka på Spara
-3.  
+
+
+
+## Kontakt
+
+Skapat av Johan Sahlberg 2025  
+johan.sahlberg@tidaholm.se
