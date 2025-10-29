@@ -30,9 +30,8 @@
                         
                         [% INCLUDE "$plugin_dir/ill_toolbar.inc" %]
                         
-                        [% IF ( total > 0 ) %]
                         <div class="page-section">
-
+                            [% IF ( total > 0 ) %]
                             <p><span>Antal utlån: [% total | html %]</span></p>                            
 
                             <table id="coill_table" class="dataTable ill_table">
@@ -93,8 +92,9 @@
 
                             <p><span>Det finns inga aktuella utlån. </span></p>
 
+                            [% END %]
                         </div>
-                        [% END %]
+                        
                         [% IF errormessage %]
                         <div class="page-section">
                             <h3 style="color: red;">Fel: [% errormessage %]</h3>
