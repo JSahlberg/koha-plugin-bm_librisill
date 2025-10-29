@@ -35,7 +35,7 @@ use Cwd qw(abs_path);
 use Data::Dumper;
 use LWP::UserAgent;
 use MARC::Record;
-# use Mojo::JSON qw(decode_json encode_json);;
+
 use URI::Escape qw(uri_unescape);
 use JSON;
 
@@ -46,15 +46,14 @@ use POSIX qw(strftime);
 use strict;
 use warnings;
 
-# use Koha::Plugin::Com::ByWaterSolutions::KitchenSink::Greeter;
 
 ## Here we set our plugin version
-our $VERSION = "0.2.2";
+our $VERSION = "0.2.3";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
 our $metadata = {
-    name            => 'BM Libris ill module',
+    name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
     date_updated    => "2025-10-24",
@@ -82,59 +81,28 @@ sub intranet_js {
     my ( $self ) = @_;    
 
     return q|
-        <script>
+        <script>           
 
-            var year = new Date().getFullYear();
-            var pastyear = new Date().getFullYear();
-            var month = new Date().getMonth() + 1;
-            var day = new Date().getDate();
-            var pastmonth = '';
-
-            if (month == 1) {
-                pastmonth = 12;
-                pastyear = pastyear - 1;
-            } else {
-                pastmonth = month - 1;
-            }
-            day == 31 ? pastday = 28 : pastday = day;
+            var searchILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=searchILL';
 
             $(`
-                <li id="fjarrlanmenu" class="nav-item dropdown">
-                    <a href="/cgi-bin/koha/mainpage.pl" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                        Fjärrlån <b class="caret"></b>
+                <li class="nav-item">
+                    <a class="nav-link" href="${searchILL_link}">
+                        <span class="nav-link-text">Fjärrlån</span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end"></ul>
                 </li>
             `).appendTo('#toplevelmenu');
 
-            var searchILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=searchILL';
-            $(`
-                <li>
-                    <a class="dropdown-item" href="${searchILL_link}">
-                        Fjärrlånebeställningar
+            if ($('#main_intranet-main').length) {
+                $('.biglinks-list:first').append(`
+                    <li>
+                    <a class="icon_general icon_fjarrlan" href="${searchILL_link}">
+                        <i class="fa fa-fw fa fa-envelope"></i>
+                    Fjärrlån
                     </a>
                 </li>
-            `).appendTo('#fjarrlanmenu ul');  
-
-            var checkedout_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=checkedout_ILL';
-
-            $(`
-                <li>
-                    <a class="dropdown-item" href="${checkedout_ILL_link}">
-                        Utlånade fjärrlån
-                    </a>
-                </li>
-            `).appendTo('#fjarrlanmenu ul');  
-
-            var ill_requests_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + `&method=librisill_requests&start=${pastyear}-${pastmonth}-${pastday}&end=${year}-${month}-${day}`;
-            
-            $(`
-                <li>
-                    <a class="dropdown-item" href="${ill_requests_link}">
-                        Importera fjärrlån (LIBRIS)
-                    </a>
-                </li>
-            `).appendTo('#fjarrlanmenu ul');
+                `);
+            }            
 
         </script>
 
@@ -294,9 +262,7 @@ sub searchILL {
             type            => "intranet",
             flagsrequired   => { circulate => "circulate_remaining_permissions" },
         }
-    );
-
-    
+    );    
 
     my $branch;
     if (C4::Context->userenv) {
@@ -398,17 +364,12 @@ ORDER BY items.dateaccessioned DESC
 
         for my $id ( @ill_mappings ) {
             
-            my $substr = substr($id->{ill_id}, 0, 3);
-            
-            if ( $substr eq 'Hjo' ) {
-                push @ill_ids, {
-                    date => '20' . substr($id->{ill_id}, 4, 2) . '-' . substr($id->{ill_id}, 6, 2) . '-' . substr($id->{ill_id}, 8, 2),
-                }
-            } else {
-                push @ill_ids, {
-                    date => '20' . substr($id->{ill_id}, 5, 2) . '-' . substr($id->{ill_id}, 7, 2) . '-' . substr($id->{ill_id}, 9, 2),
-                }
+            my $sigellength = length($id->{ill_id}) - 12;
+
+            push @ill_ids, {
+                date => '20' . substr($id->{ill_id}, ($sigellength + 1), 2) . '-' . substr($id->{ill_id}, ($sigellength + 3), 2) . '-' . substr($id->{ill_id}, ($sigellength + 5), 2),
             }
+
         }
 
         @ill_ids = sort { $b->{date} cmp $a->{date} } @ill_ids;
@@ -445,7 +406,6 @@ ORDER BY items.dateaccessioned DESC
             $error = $status_decoded->{'error'};
             warn "Error: " . $error;
         } else {
-
 
             $ill_requests = $status_decoded->{'ill_requests'};
 
@@ -701,17 +661,12 @@ ORDER BY items.dateaccessioned DESC
 
         for my $id ( @ill_mappings ) {
             
-            my $substr = substr($id->{ill_id}, 0, 3);
-            
-            if ( $substr eq 'Hjo' ) {
-                push @ill_ids, {
-                    date => '20' . substr($id->{ill_id}, 4, 2) . '-' . substr($id->{ill_id}, 6, 2) . '-' . substr($id->{ill_id}, 8, 2),
-                }
-            } else {
-                push @ill_ids, {
-                    date => '20' . substr($id->{ill_id}, 5, 2) . '-' . substr($id->{ill_id}, 7, 2) . '-' . substr($id->{ill_id}, 9, 2),
-                }
+            my $sigellength = length($id->{ill_id}) - 12;
+
+            push @ill_ids, {
+                date => '20' . substr($id->{ill_id}, ($sigellength + 1), 2) . '-' . substr($id->{ill_id}, ($sigellength + 3), 2) . '-' . substr($id->{ill_id}, ($sigellength + 5), 2),
             }
+
         }
 
         @ill_ids = sort { $b->{date} cmp $a->{date} } @ill_ids;
@@ -1098,21 +1053,13 @@ sub librisill_incomings {
 
     my $end_raw = strftime "%F", localtime($time);
     my $start_raw = strftime "%F", localtime($time-30*24*60*60);
-    warn "Start raw: " . $start_raw;
-    warn "End raw: " . $end_raw;
-
-
-
+    
     my $start = substr($start_raw, 0, 5) . (sprintf "%d" , substr($start_raw, 5, 2)) . "-" . sprintf "%d" , substr($start_raw, 8, 2);
     my $end = substr($end_raw, 0, 5) . (sprintf "%d" , substr($end_raw, 5, 2)) . "-" . sprintf "%d" , substr($end_raw, 8, 2);
-    warn "Start: " . $start;
-    warn "End: " . $end;
-
+    
 
     # Search query
     my $sigil = $branch_fixed;
-#    my $start = $query->param('start');
-#    my $end = $query->param('end');
     my $archive = $query->param('archive');
     my $action = $query->param('action');
     my $response_id = $query->param('response_id');
@@ -1120,7 +1067,6 @@ sub librisill_incomings {
     my $may_reserve = $query->param('may_reserve');
     my $order_id = $query->param('order_id');
     my $timestamp = $query->param('last_modified');
-
 
     my $url;
     my $fragment;
@@ -1281,12 +1227,6 @@ sub _update_libris {
         warn "*** Update message: " . $new_data->{'update_message'};
         warn "*** Last modified: " . $new_data->{'ill_requests'}->[0]->{'last_modified'};
         warn "*** Status: " . $new_data->{'ill_requests'}->[0]->{'status'};
-
-        # Update the request in the database
-        # FIXME Create a proper sub for updating data
-        # $request->status( $direction . '_' . translate_status( $new_data->{'ill_requests'}->[0]->{'status'} ) );
-        # $request->extended_attributes->find({ type => 'last_modified' })->value( $new_data->{'ill_requests'}->[0]->{'last_modified'} );
-        # request->store;
 
     } else {
 
