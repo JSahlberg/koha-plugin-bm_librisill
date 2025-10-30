@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.2.3";
+our $VERSION = "0.2.4";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -56,7 +56,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2025-10-24",
+    date_updated    => "2025-10-30",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -287,24 +287,10 @@ SELECT DISTINCT
     borrowers.surname, 
     borrowers.firstname, 
     CASE
-        WHEN items.homebranch='GULL' AND LOCATE ('gull-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('gull-', itemnotes_nonpublic), 16)
-        WHEN items.homebranch='HJO' AND LOCATE ('hjo-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('hjo-', itemnotes_nonpublic), 15)
-        WHEN items.homebranch='HOVA' AND LOCATE ('hova-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('hova-', itemnotes_nonpublic), 16)
-        WHEN items.homebranch='KABO' AND LOCATE ('kabo-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('kabo-', itemnotes_nonpublic), 16)
-        WHEN items.homebranch='MARI' AND LOCATE ('mari-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('mari-', itemnotes_nonpublic), 16)
-        WHEN items.homebranch='SKSB' AND LOCATE ('sksb-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('sksb-', itemnotes_nonpublic), 16)
-        WHEN items.homebranch='TIDA' AND LOCATE ('tida-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('tida-', itemnotes_nonpublic), 16)
-        WHEN items.homebranch='TIKF' AND LOCATE ('tikf-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('tikf-', itemnotes_nonpublic), 16)
-        WHEN items.homebranch='TORE' AND LOCATE ('tore-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('tore-', itemnotes_nonpublic), 16)
+        
+        WHEN items.homebranch='$branch' AND LOCATE ('$branch-', itemnotes_nonpublic) > 0
+        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('$branch-', itemnotes_nonpublic), 16)
+
     ELSE
         NULL
     END 
@@ -588,24 +574,10 @@ SELECT DISTINCT
     borrowers.surname,
     borrowers.firstname,    
     CASE
-        WHEN items.homebranch='GULL' AND LOCATE ('gull-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('gull-', itemnotes_nonpublic), 16)
-        WHEN items.homebranch='HJO' AND LOCATE ('hjo-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('hjo-', itemnotes_nonpublic), 15)
-        WHEN items.homebranch='HOVA' AND LOCATE ('hova-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('hova-', itemnotes_nonpublic), 16)
-        WHEN items.homebranch='KABO' AND LOCATE ('kabo-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('kabo-', itemnotes_nonpublic), 16)
-        WHEN items.homebranch='MARI' AND LOCATE ('mari-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('mari-', itemnotes_nonpublic), 16)
-        WHEN items.homebranch='SKSB' AND LOCATE ('sksb-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('sksb-', itemnotes_nonpublic), 16)
-        WHEN items.homebranch='TIDA' AND LOCATE ('tida-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('tida-', itemnotes_nonpublic), 16)
-        WHEN items.homebranch='TIKF' AND LOCATE ('tikf-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('tikf-', itemnotes_nonpublic), 16)
-        WHEN items.homebranch='TORE' AND LOCATE ('tore-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('tore-', itemnotes_nonpublic), 16)
+        
+        WHEN items.homebranch='$branch' AND LOCATE ('$branch-', itemnotes_nonpublic) > 0
+        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('$branch-', itemnotes_nonpublic), 16)
+
     ELSE
         NULL
     END
