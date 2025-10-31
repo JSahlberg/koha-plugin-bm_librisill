@@ -268,6 +268,11 @@ sub searchILL {
     if (C4::Context->userenv) {
         $branch = C4::Context->userenv->{'branch'};
     }
+    my $branch_fixed = join '', map { ucfirst lc $_ } split /(\s+)/, $branch;
+
+    my $ill_id_offset = length( $branch_fixed ) + 12;
+    
+    warn "Offset: " . $ill_id_offset;
 
     my $itemtype = $self->retrieve_data('itemtype');
     my $ccode = $self->retrieve_data('ccode');
@@ -288,8 +293,8 @@ SELECT DISTINCT
     borrowers.firstname, 
     CASE
         
-        WHEN items.homebranch='$branch' AND LOCATE ('$branch-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('$branch-', itemnotes_nonpublic), 16)
+        WHEN items.homebranch='$branch_fixed' AND LOCATE ('$branch_fixed-', itemnotes_nonpublic) > 0
+        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('$branch_fixed-', itemnotes_nonpublic), $ill_id_offset)
 
     ELSE
         NULL
@@ -553,6 +558,11 @@ sub checkedout_ILL {
     if (C4::Context->userenv) {
         $branch = C4::Context->userenv->{'branch'};
     }
+    my $branch_fixed = join '', map { ucfirst lc $_ } split /(\s+)/, $branch;
+
+    my $ill_id_offset = length( $branch_fixed ) + 12;
+    
+    warn "Offset: " . $ill_id_offset;
 
     my $itemtype = $self->retrieve_data('itemtype');
     my $ccode = $self->retrieve_data('ccode');
@@ -575,8 +585,8 @@ SELECT DISTINCT
     borrowers.firstname,    
     CASE
         
-        WHEN items.homebranch='$branch' AND LOCATE ('$branch-', itemnotes_nonpublic) > 0
-        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('$branch-', itemnotes_nonpublic), 16)
+        WHEN items.homebranch='$branch_fixed' AND LOCATE ('$branch_fixed-', itemnotes_nonpublic) > 0
+        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('$branch_fixed-', itemnotes_nonpublic), $ill_id_offset)
 
     ELSE
         NULL
