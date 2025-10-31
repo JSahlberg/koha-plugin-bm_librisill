@@ -1,5 +1,7 @@
 # Custom ILL module for Koha and Libris (For Swedish Libraries only)
 
+![Navbar of ILL](ILL_bar.jpg)
+
 ## Installation:
 
 1.  Ladda ned senaste releasen här: https://github.com/JSahlberg/koha-plugin-bm_librisill/releases
