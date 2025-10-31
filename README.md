@@ -32,35 +32,35 @@
 2.  Klicka på **Spara**
 
 
-### Funktioner:
+## Funktioner:
 
-## Fjärrlåneförfrågningar
+### Fjärrlåneförfrågningar
 
 Här visas de aktuella fjärrlån man har importerat och skapat reserverationer på som ännu inte anlänt.
 
-## Utlånade fjärrlån:
+### Utlånade fjärrlån:
 
 Här är de fjärrlån som är utlånade till låntagare.
 
-## Importera fjärrlån (Libris)
+### Importera fjärrlån (Libris)
 
 Här visas de senaste fjärrlånen som gjorts på Libris Fjärrlån.
 För att importera lånet in i Koha så klickar på man på **Behandla**.
 En ny sida visas med informationen om fjärrlånet.
 Klicka på **Importera och reservera** för att automatiskt importera in posten från Libris och reservera på låntagaren.
 
-## Nya inkommande fjärrlån (Libris)
+### Nya inkommande fjärrlån (Libris)
 
 Här visas de obehandlade förfrågningarna som kommer från andra bibliotek som vill låna.
 Tryck på **Behandla** för att öppna förfrågan.
 Välj åtgärd och skriv in ev meddelande och om den kan ev reserveras om utlånad.
 Klicka sedan på **Skicka** för att registrera på Libris fjärrlån.
 
-## Arkiverade inkommande fjärrlån (Libris)
+### Arkiverade inkommande fjärrlån (Libris)
 
 Här visas de förfrågningarna som har blivit behandlade.
 
-## Sök borttagna fjärrlån
+### Sök borttagna fjärrlån
 
 Här kan man söka på de fjärrlån man har haft registrerade och tagit bort från katalogen.
 
