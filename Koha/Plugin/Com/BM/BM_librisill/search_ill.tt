@@ -64,7 +64,7 @@
                                             [% IF ( il.lf_number == ill.ill_id ) %]
                                                 [% FOREACH lib IN ill_libraries %]
                                                     [% IF lib.sigel == il.active_library %]
-                                                        <a href="https://biblioteksdatabasen.libris.kb.se/library/[% lib.library_id %]/" target="_blank">[% lib.sigel %] - [% lib.libraryname %]</a>
+                                                        <a href="https://biblioteksdatabasen.libris.kb.se/library/[% lib.library_id %]/" target="_blank" data="[% lib.sigel %]">[% lib.sigel %] - [% lib.libraryname %]</a>
                                                     [% END %]
                                                 [% END %]
                                             [% END %]                                                
@@ -164,7 +164,7 @@
         $('.behandla').on('click', function() {
 
             $('#behandlaModal .itemnumber').val( $(this).attr('itemnumber') );
-            $('#behandlaModal .active_library').val( $(this).closest('tr').find('.active_library').text() );
+            $('#behandlaModal .active_library').val( $(this).closest('tr').find('.ill_active_library a').attr('data') );
             $('#behandlaModal .ill_id').val( $(this).attr('ill_id') );
             $('#behandlaModal .modal_ill_id').text( $(this).attr('ill_id') );
             $('#behandlaModal .modal_title').text( $(this).closest('tr').find('.ill_title').text() );
