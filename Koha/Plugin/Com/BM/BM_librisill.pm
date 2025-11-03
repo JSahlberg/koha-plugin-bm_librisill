@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.2.5";
+our $VERSION = "0.2.6";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -56,7 +56,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2025-10-31",
+    date_updated    => "2025-11-03",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -347,95 +347,106 @@ ORDER BY items.dateaccessioned DESC
     my @ill_libraries = ();
 
     my $error;
+
+    my @ill_ids = ();
     
 
     if ( $total > 0 ) {
 
-        my @ill_ids = ();
-
         for my $id ( @ill_mappings ) {
-            
-            my $sigellength = length($id->{ill_id}) - 12;
 
-            push @ill_ids, {
-                date => '20' . substr($id->{ill_id}, ($sigellength + 1), 2) . '-' . substr($id->{ill_id}, ($sigellength + 3), 2) . '-' . substr($id->{ill_id}, ($sigellength + 5), 2),
+            if ( $id->{ill_id} ) {
+            
+                my $sigellength = length($id->{ill_id}) - 12;
+
+                push @ill_ids, {
+                    date => '20' . substr($id->{ill_id}, ($sigellength + 1), 2) . '-' . substr($id->{ill_id}, ($sigellength + 3), 2) . '-' . substr($id->{ill_id}, ($sigellength + 5), 2),
+                }
+            } else {
+                warn "No ID!";
             }
 
         }
 
-        @ill_ids = sort { $b->{date} cmp $a->{date} } @ill_ids;
+        warn "Length of IDs: " . scalar @ill_ids ;
 
         my $start;
-
-        my $end = $ill_ids[0]->{date};
-        if ( $total == 1 ) {
-            $start = $end;
-        } else {
-            $start = $ill_ids[-1]->{date};
-        }
-
-        warn "Start and end: " . $start . ' | ' . $end;
-
-        my @pos = ('8','5');
+        my $end;
         
-        for my $po (@pos) {
-            if (substr($end, $po, 1 ) eq '0') {
-                substr($end, $po, 1 ) = "";
+
+        if ( scalar @ill_ids > 0 ) {
+            @ill_ids = sort { $b->{date} cmp $a->{date} } @ill_ids;
+
+            $end = $ill_ids[0]->{date};
+            if ( $total == 1 ) {
+                $start = $end;
+            } else {
+                $start = $ill_ids[-1]->{date};
             }
-            if (substr($start, $po, 1 ) eq '0') {
-                substr($start, $po, 1 ) = "";
-            }
-        }
 
-        my $ill_id = "0";
+            warn "Start and end: " . $start . ' | ' . $end;
 
-        my $statuses = flstatus( $self, $ill_id, $start, $end );
-
-        my $status_decoded = decode_json( $statuses );
-
-        if ( $status_decoded->{'error'} ) {
-            $error = $status_decoded->{'error'};
-            warn "Error: " . $error;
-        } else {
-
-            $ill_requests = $status_decoded->{'ill_requests'};
-
-            my @ill_sigels;
-
-            for my $ill ( @$ill_requests ) {
-                if ( grep{$_->{'ill_id'} eq $ill->{'lf_number'}} @ill_mappings )  {
-                    unless (grep{$_ eq $ill->{'active_library'}} @ill_sigels) {
-                        push (@ill_sigels, $ill->{'active_library'});
-                        warn "Ill sigel: " . $ill->{'active_library'};
-                    }
+            my @pos = ('8','5');
+            
+            for my $po (@pos) {
+                if (substr($end, $po, 1 ) eq '0') {
+                    substr($end, $po, 1 ) = "";
+                }
+                if (substr($start, $po, 1 ) eq '0') {
+                    substr($start, $po, 1 ) = "";
                 }
             }
-        
-            my $sigel = join("," , @ill_sigels);
 
-            my $libdataJSON = getlibdata( $self, $sigel);
-            my $libdata = decode_json( $libdataJSON );
-            my $lib = $libdata->{'libraries'};
+            my $ill_id = "0";
 
-            for my $ill ( @$ill_requests ) {
+            my $statuses = flstatus( $self, $ill_id, $start, $end );
 
-                if ( grep{$_->{'ill_id'} eq $ill->{'lf_number'}} @ill_mappings )  {
+            my $status_decoded = decode_json( $statuses );
 
-                    for my $li ( @$lib ) {
+            if ( $status_decoded->{'error'} ) {
+                $error = $status_decoded->{'error'};
+                warn "Error: " . $error;
+            } else {
 
-                        if ( $li->{'library_code'} eq $ill->{'active_library'}) {
-                            push (@ill_libraries, {
-                    
-                                sigel        => $ill->{'active_library'},
-                                libraryname  => $li->{'name'},
-                                library_id   => $li->{'library_id'},
-                    
-                            }) unless grep{$_->{'sigel'} eq $ill->{'active_library'}} @ill_libraries;
+                $ill_requests = $status_decoded->{'ill_requests'};
+
+                my @ill_sigels;
+
+                for my $ill ( @$ill_requests ) {
+                    if ( grep{$_->{'ill_id'} eq $ill->{'lf_number'}} @ill_mappings )  {
+                        unless (grep{$_ eq $ill->{'active_library'}} @ill_sigels) {
+                            push (@ill_sigels, $ill->{'active_library'});
+                            warn "Ill sigel: " . $ill->{'active_library'};
+                        }
+                    }
+                }
+            
+                my $sigel = join("," , @ill_sigels);
+
+                my $libdataJSON = getlibdata( $self, $sigel);
+                my $libdata = decode_json( $libdataJSON );
+                my $lib = $libdata->{'libraries'};
+
+                for my $ill ( @$ill_requests ) {
+
+                    if ( grep{$_->{'ill_id'} eq $ill->{'lf_number'}} @ill_mappings )  {
+
+                        for my $li ( @$lib ) {
+
+                            if ( $li->{'library_code'} eq $ill->{'active_library'}) {
+                                push (@ill_libraries, {
+                        
+                                    sigel        => $ill->{'active_library'},
+                                    libraryname  => $li->{'name'},
+                                    library_id   => $li->{'library_id'},
+                        
+                                }) unless grep{$_->{'sigel'} eq $ill->{'active_library'}} @ill_libraries;
+                            }
                         }
                     }
                 }
             }
-        }
+        }                
     }
 
     $template->param(
@@ -635,88 +646,99 @@ ORDER BY items.dateaccessioned DESC
     my $total = scalar @ill_mappings;
     my $ill_requests = ();
     my @ill_libraries = ();
+    my @ill_ids = ();
     
 
     if ( $total > 0 ) {
 
-        my @ill_ids = ();
-
         for my $id ( @ill_mappings ) {
+
+            if ( $id->{ill_id} ) {
             
-            my $sigellength = length($id->{ill_id}) - 12;
+                my $sigellength = length($id->{ill_id}) - 12;
 
-            push @ill_ids, {
-                date => '20' . substr($id->{ill_id}, ($sigellength + 1), 2) . '-' . substr($id->{ill_id}, ($sigellength + 3), 2) . '-' . substr($id->{ill_id}, ($sigellength + 5), 2),
+                push @ill_ids, {
+                    date => '20' . substr($id->{ill_id}, ($sigellength + 1), 2) . '-' . substr($id->{ill_id}, ($sigellength + 3), 2) . '-' . substr($id->{ill_id}, ($sigellength + 5), 2),
+                }
+            } else {
+                warn "No ID!";
             }
-
         }
 
-        @ill_ids = sort { $b->{date} cmp $a->{date} } @ill_ids;
-    
+        warn "Length of IDs: " . scalar @ill_ids ;
+
         my $start;
+        my $end;
 
-        my $end = $ill_ids[0]->{date};
-        if ( $total == 1 ) {
-            $start = $end;
-        } else {
-            $start = $ill_ids[-1]->{date};
-        }
+
+        if ( scalar @ill_ids > 0 ) {
+            @ill_ids = sort { $b->{date} cmp $a->{date} } @ill_ids;
         
-        my @pos = ('8','5');
-        
-        for my $po (@pos) {
-            if (substr($end, $po, 1 ) eq '0') {
-                substr($end, $po, 1 ) = "";
+            $end = $ill_ids[0]->{date};
+            if ( $total == 1 ) {
+                $start = $end;
+            } else {
+                $start = $ill_ids[-1]->{date};
             }
-            if (substr($start, $po, 1 ) eq '0') {
-                substr($start, $po, 1 ) = "";
-            }
-        }
 
-        my $ill_id = "0";
-
-        my $statuses = flstatus( $self, $ill_id, $start, $end );
-
-        my $status_decoded = decode_json( $statuses );
-
-        if ( $status_decoded->{'error'} ) {
-            $error = $status_decoded->{'error'};
-            warn "Error: " . $error;
-        } else {
-
-            $ill_requests = $status_decoded->{'ill_requests'};
-
-            my @ill_sigels;
-
-            for my $ill ( @$ill_requests ) {
-                if ( grep{$_->{'ill_id'} eq $ill->{'lf_number'}} @ill_mappings )  {
-                    unless (grep{$_ eq $ill->{'active_library'}} @ill_sigels) {
-                        push (@ill_sigels, $ill->{'active_library'});
-                        warn "Ill sigel: " . $ill->{'active_library'};
-                    }
+            warn "Start and end: " . $start . ' | ' . $end;
+            
+            my @pos = ('8','5');
+            
+            for my $po (@pos) {
+                if (substr($end, $po, 1 ) eq '0') {
+                    substr($end, $po, 1 ) = "";
+                }
+                if (substr($start, $po, 1 ) eq '0') {
+                    substr($start, $po, 1 ) = "";
                 }
             }
-        
-            my $sigel = join("," , @ill_sigels);
 
-            my $libdataJSON = getlibdata( $self, $sigel);
-            my $libdata = decode_json( $libdataJSON );
-            my $lib = $libdata->{'libraries'};
+            my $ill_id = "0";
 
-            for my $ill ( @$ill_requests ) {
+            my $statuses = flstatus( $self, $ill_id, $start, $end );
 
-                if ( grep{$_->{'ill_id'} eq $ill->{'lf_number'}} @ill_mappings )  {
+            my $status_decoded = decode_json( $statuses );
 
-                    for my $li ( @$lib ) {
+            if ( $status_decoded->{'error'} ) {
+                $error = $status_decoded->{'error'};
+                warn "Error: " . $error;
+            } else {
 
-                        if ( $li->{'library_code'} eq $ill->{'active_library'}) {
-                            push (@ill_libraries, {
-                    
-                                sigel        => $ill->{'active_library'},
-                                libraryname  => $li->{'name'},
-                                library_id   => $li->{'library_id'},
-                    
-                            }) unless grep{$_->{'sigel'} eq $ill->{'active_library'}} @ill_libraries;
+                $ill_requests = $status_decoded->{'ill_requests'};
+
+                my @ill_sigels;
+
+                for my $ill ( @$ill_requests ) {
+                    if ( grep{$_->{'ill_id'} eq $ill->{'lf_number'}} @ill_mappings )  {
+                        unless (grep{$_ eq $ill->{'active_library'}} @ill_sigels) {
+                            push (@ill_sigels, $ill->{'active_library'});
+                            warn "Ill sigel: " . $ill->{'active_library'};
+                        }
+                    }
+                }
+            
+                my $sigel = join("," , @ill_sigels);
+
+                my $libdataJSON = getlibdata( $self, $sigel);
+                my $libdata = decode_json( $libdataJSON );
+                my $lib = $libdata->{'libraries'};
+
+                for my $ill ( @$ill_requests ) {
+
+                    if ( grep{$_->{'ill_id'} eq $ill->{'lf_number'}} @ill_mappings )  {
+
+                        for my $li ( @$lib ) {
+
+                            if ( $li->{'library_code'} eq $ill->{'active_library'}) {
+                                push (@ill_libraries, {
+                        
+                                    sigel        => $ill->{'active_library'},
+                                    libraryname  => $li->{'name'},
+                                    library_id   => $li->{'library_id'},
+                        
+                                }) unless grep{$_->{'sigel'} eq $ill->{'active_library'}} @ill_libraries;
+                            }
                         }
                     }
                 }
@@ -1404,5 +1426,4 @@ sub _append_to_field {
 }
 
 1;
-
 
