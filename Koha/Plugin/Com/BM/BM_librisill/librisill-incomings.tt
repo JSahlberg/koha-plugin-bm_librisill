@@ -36,7 +36,8 @@
                                 
                                 [% IF NOT decoded.count < 1 %]
 
-                                <p><span>Antal förfrågningar: [% decoded.count | html %]</span></p>                            
+                                <!--<p><span>Antal förfrågningar: [% decoded.count | html %]</span></p>-->
+                                
                                 <table id="ill_incomings_table" class="dataTable ill_table">
                                     <thead>
                                         <tr>
@@ -118,7 +119,12 @@
                 [1, 'desc'],
             ],
             bAutoWidth: false,
-            pageLength: 50,
+            pageLength: 25,
+            language: {
+                "search" : "Sök:",
+                "lengthMenu" : "_MENU_ poster per sida",
+                "info" : "Visar _START_ till _END_ av _TOTAL_ poster",
+            }
         }); 
 
         $('.behandla').on('click', function() {
