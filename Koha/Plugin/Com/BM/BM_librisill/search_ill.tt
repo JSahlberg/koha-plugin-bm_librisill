@@ -34,7 +34,7 @@
 
                             [% IF ( total > 0 ) %]
 
-                            <p><span>Antal förfrågningar: [% total | html %]</span></p>                            
+                            <!--<p><span>Antal förfrågningar: [% total | html %]</span></p>-->
 
                             <table id="ill_search_table" class="dataTable ill_table">
                                 <thead>
@@ -168,8 +168,14 @@
                 [3, 'desc'],                
             ],
             bAutoWidth: false,
-            pageLength: 50,
-        });        
+            pageLength: 25,
+            language: {
+                "search" : "Sök:",
+                "lengthMenu" : "_MENU_ poster per sida",
+                "info" : "Visar _START_ till _END_ av _TOTAL_ poster",
+            }
+        });       
+
 
         $('.behandla').on('click', function() {
 
@@ -199,7 +205,7 @@
             
             var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=save_ILL&itemnumber=${itemnumber}&itemnotes=${itemnotes}&ill_id=${ill_id}&barcode=${barcode}&active_library=${active_library}`;
     
-            console.log(encodeURI(url));
+            //console.log(encodeURI(url));
 
             $.ajax({
                 url: `${url}`,
@@ -263,7 +269,7 @@
         });
 
         $(document).ready(function() {
-            
+
             $('.ill_status').each(function() {
                 if ($(this).html().includes('Levererad')) {
                     $(this).attr('style', 'background-color:rgb(204, 255, 200) !important');
