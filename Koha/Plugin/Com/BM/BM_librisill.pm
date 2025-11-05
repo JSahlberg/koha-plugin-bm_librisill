@@ -1318,6 +1318,12 @@ sub import_ill {
 
     $record = _append_to_field( $record, '245', 'a', 'FJÄRRLÅN' );
 
+    my $ill_marc = MARC::Field->new(
+        '887',' ',' ',
+        a => $ill_id,
+    );
+    $record->insert_fields_ordered( $ill_marc );
+
     my ( $biblionumber, $biblioitemnumber, $itemnumber );
 
     ( $biblionumber, $biblioitemnumber ) = AddBiblio( $record, '' );
