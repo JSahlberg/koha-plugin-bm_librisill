@@ -41,6 +41,7 @@
                                     <thead>
                                         <tr>
                                         <th>Beställning</th>
+                                        <th>Löpnummer</th>
                                         <th>Librisnummer</th>
                                         <th>Titel</th>
                                         <th>Bibliotek</th>
@@ -54,6 +55,7 @@
                                         [% FOREACH ill_request IN decoded.ill_requests.reverse %]            
                                         <tr>
                                         <td class="lf_number"><a href="https://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill_request.lf_number %]" target="_blank">[% ill_request.lf_number %]</a></td>
+                                        <td class="request_id"><a href="https://iller.libris.kb.se/librisfjarrlan/lf.php?action=incoming&id=[% ill_request.request_id %]" target="_blank">[% ill_request.request_id %]</a></td>
                                         <td class="bib_id"><a href="https://libris.kb.se/bib/[% ill_request.bib_id %]" target="_blank">[% ill_request.bib_id %]</a></td>
                                         <td class="ill_title"><a href="/cgi-bin/koha/catalogue/search.pl?q=[% ill_request.bib_id %]" target="_blank">[% ill_request.title %]</a></td>
                                         <td class="req_library"><a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% ill_request.requesting_library %]">[% ill_request.requesting_library %]</a></td>
@@ -109,6 +111,16 @@
     [% INCLUDE 'columns_settings.inc' %]
     [% INCLUDE "$plugin_dir/librisill_js.inc" %]
     <script>
+
+        new DataTable('#ill_incomings_table', {
+            ordering: true,
+            order: [
+                [1, 'desc'],
+            ],
+            bAutoWidth: false,
+            pageLength: 50,
+        }); 
+
         $('.behandla').on('click', function() {
             var order_id = $(this).attr('data');
             var timestamp = $(this).attr('timestamp');
