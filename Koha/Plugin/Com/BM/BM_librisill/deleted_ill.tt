@@ -34,7 +34,7 @@
 
                             [% IF ( total > 0 ) %]
 
-                            <p><span>Antal borttagna: [% total | html %]</span></p>                            
+                            <!--<p><span>Antal borttagna: [% total | html %]</span></p>-->
 
                             <table id="deletedill_table" class="dataTable ill_table">
                                 <thead>
@@ -97,7 +97,12 @@
                 [0, 'desc'],
             ],
             bAutoWidth: false,
-            pageLength: 50,
+            pageLength: 25,
+            language: {
+                "search" : "Sök:",
+                "lengthMenu" : "_MENU_ poster per sida",
+                "info" : "Visar _START_ till _END_ av _TOTAL_ poster",
+            }
         });
 
     </script>
