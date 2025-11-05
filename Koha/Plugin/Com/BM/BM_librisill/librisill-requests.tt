@@ -34,7 +34,7 @@
                 <table id="ill_resuests_table" class="dataTable ill_table">
                   <thead>
                     <tr>
-                      <th>Fjärrlånenummer</th>
+                      <th>Fjärrlånenummer</th>                      
                       <th>Titel</th>
                       <th>Låntagare</th>
                       <th>Importera</th>                      
@@ -43,10 +43,10 @@
                   <tbody>
                     [% FOREACH ill_request IN decoded.ill_requests.reverse %]            
                     <tr>
-                      <td><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill_request.lf_number %]" target="_blank">[% ill_request.lf_number %]</a></td>
+                      <td><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill_request.lf_number %]" target="_blank">[% ill_request.lf_number %]</a></td>                      
                       <td>[% ill_request.title %]</td>
                       <td style="white-space:nowrap">[% IF ill_request.user_id.length > 0 %]<a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% ill_request.user_id %]" target="_blank" >[% ill_request.user_id %]</a>[% ELSE %] (ej angivet) [% END  %]</td>
-                      <td><a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=librisill_request&lfnumber=[% ill_request.lf_number %]">Behandla</a></td>
+                      <td style="text-align: center;"><a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=librisill_request&lfnumber=[% ill_request.lf_number %]">Behandla</a></td>
                       <!-- <td><a href="#" class="import" data="[% ill_request.bib_id %]">Importera</a></td> -->
                     </tr>
                     [% END %]
@@ -74,25 +74,34 @@
   
   <script>
 
-      $('.import').each(function () {
-          $(this).click(function (event) {
-              event.preventDefault();
-              PopupZ3950("", $(this).attr('data'));
-              return false;
-          });
-      });
-     
-      function PopupZ3950(fw, bib_id) {
-          var strQuery = GetZ3950Terms(fw);
-          if(strQuery){
-          window.open("/cgi-bin/koha/cataloguing/z3950_search.pl?biblionumber=0&stdid=" + bib_id + "&z3950_1=1&op=do_search&id=1","z3950search",'width=800,height=500,location=yes,toolbar=no,scrollbars=yes,resize=yes');
-          }
-      }
+    new DataTable('#ill_resuests_table', {
+      ordering: true,
+      order: [
+        [0, 'desc'],
+      ],
+      bAutoWidth: false,
+      pageLength: 50,
+    }); 
 
-      function GetZ3950Terms(fw){
-          var strQuery="&frameworkcode=" + fw;
-          return strQuery;
-      }    
+    $('.import').each(function () {
+        $(this).click(function (event) {
+            event.preventDefault();
+            PopupZ3950("", $(this).attr('data'));
+            return false;
+        });
+    });
+    
+    function PopupZ3950(fw, bib_id) {
+        var strQuery = GetZ3950Terms(fw);
+        if(strQuery){
+        window.open("/cgi-bin/koha/cataloguing/z3950_search.pl?biblionumber=0&stdid=" + bib_id + "&z3950_1=1&op=do_search&id=1","z3950search",'width=800,height=500,location=yes,toolbar=no,scrollbars=yes,resize=yes');
+        }
+    }
+
+    function GetZ3950Terms(fw){
+        var strQuery="&frameworkcode=" + fw;
+        return strQuery;
+    }    
 
   </script>
 [% END %]
