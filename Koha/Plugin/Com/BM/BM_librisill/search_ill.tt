@@ -161,6 +161,16 @@
     [% INCLUDE 'columns_settings.inc' %]
     [% INCLUDE "$plugin_dir/librisill_js.inc" %]
     <script>
+
+        new DataTable('#ill_search_table', {
+            ordering: true,
+            order: [
+                [3, 'desc'],                
+            ],
+            bAutoWidth: false,
+            pageLength: 50,
+        });        
+
         $('.behandla').on('click', function() {
 
             $('#behandlaModal .itemnumber').val( $(this).attr('itemnumber') );
