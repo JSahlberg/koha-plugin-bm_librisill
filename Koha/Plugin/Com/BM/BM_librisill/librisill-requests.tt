@@ -80,7 +80,12 @@
         [0, 'desc'],
       ],
       bAutoWidth: false,
-      pageLength: 50,
+      pageLength: 25,
+      language: {
+        "search" : "Sök:",
+        "lengthMenu" : "_MENU_ poster per sida",
+        "info" : "Visar _START_ till _END_ av _TOTAL_ poster",
+      }
     }); 
 
     $('.import').each(function () {
