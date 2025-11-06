@@ -62,7 +62,7 @@
                                             <td class="req_library">
                                             [% FOREACH lib IN ill_libraries %]
                                                 [% IF ill_request.requesting_library == lib.sigel %]
-                                                    <a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% lib.searchstr %]">[% lib.sigel %] - [% lib.libraryname %]</a>
+                                                    <a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% IF lib.length > 1 %][% lib.sigel %][% ELSE %][% lib.searchstr %][% END %]">[% lib.sigel %] - [% lib.libraryname %]</a>
                                                 [% END %]
                                             [% END %]
                                             
@@ -119,7 +119,7 @@
     [% INCLUDE 'columns_settings.inc' %]
     [% INCLUDE "$plugin_dir/librisill_js.inc" %]
     <script>
-    
+
         new DataTable('#ill_incomings_table', {
             ordering: true,
             order: [
