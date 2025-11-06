@@ -37,33 +37,40 @@
                                 [% IF NOT decoded.count < 1 %]
 
                                 <!--<p><span>Antal förfrågningar: [% decoded.count | html %]</span></p>-->
-                                
+
                                 <table id="ill_incomings_table" class="dataTable ill_table">
                                     <thead>
                                         <tr>
-                                        <th>Beställning</th>
-                                        <th>Löpnummer</th>
-                                        <th>Librisnummer</th>
-                                        <th>Titel</th>
-                                        <th>Bibliotek</th>
-                                        <th>Status</th>
-                                        <th>Plocklapp</th>
-                                        <th>Adresslapp</th>
-                                        [% IF NOT archive %] <th>Behandla</th> [% END %]
+                                            <th>Beställning</th>
+                                            <th>Löpnummer</th>
+                                            <th>Librisnummer</th>
+                                            <th>Titel</th>
+                                            <th>Bibliotek</th>
+                                            <th>Status</th>
+                                            <th>Plocklapp</th>
+                                            <th>Adresslapp</th>
+                                            [% IF NOT archive %] <th>Behandla</th> [% END %]
                                         </tr>
                                     </thead>
                                     <tbody>
                                         [% FOREACH ill_request IN decoded.ill_requests.reverse %]            
                                         <tr>
-                                        <td class="lf_number"><a href="https://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill_request.lf_number %]" target="_blank">[% ill_request.lf_number %]</a></td>
-                                        <td class="request_id"><a href="https://iller.libris.kb.se/librisfjarrlan/lf.php?action=incoming&id=[% ill_request.request_id %]" target="_blank">[% ill_request.request_id %]</a></td>
-                                        <td class="bib_id"><a href="https://libris.kb.se/bib/[% ill_request.bib_id %]" target="_blank">[% ill_request.bib_id %]</a></td>
-                                        <td class="ill_title"><a href="/cgi-bin/koha/catalogue/search.pl?q=[% ill_request.bib_id %]" target="_blank">[% ill_request.title %]</a></td>
-                                        <td class="req_library"><a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% ill_request.requesting_library %]">[% ill_request.requesting_library %]</a></td>
-                                        <td class="ill_status">[% ill_request.status %]</td>
-                                        <td style="text-align: center;"><button class="btn btn-xs btn-primary" onclick="window.open('https://iller.libris.kb.se/librisfjarrlan/api/illrequests/[% decoded.library_code %]/[% ill_request.lf_number %]?format=pdf')">Öppna PDF</button></td>
-                                        <td style="text-align: center;"><button class="adresslapplink btn btn-xs btn-primary" data="[% ill_request.requesting_library %]">Skriv ut</button></td>
-                                        [% IF NOT archive %] <td><button class="behandla btn btn-xs btn-success" data-bs-toggle="modal" data-bs-target="#behandlaModal" data="[% ill_request.request_id	%]" timestamp="[% ill_request.last_modified %]">Öppna</a></td> [% END %]
+                                            <td class="lf_number"><a href="https://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill_request.lf_number %]" target="_blank">[% ill_request.lf_number %]</a></td>
+                                            <td class="request_id"><a href="https://iller.libris.kb.se/librisfjarrlan/lf.php?action=incoming&id=[% ill_request.request_id %]" target="_blank">[% ill_request.request_id %]</a></td>
+                                            <td class="bib_id"><a href="https://libris.kb.se/bib/[% ill_request.bib_id %]" target="_blank">[% ill_request.bib_id %]</a></td>
+                                            <td class="ill_title"><a href="/cgi-bin/koha/catalogue/search.pl?q=[% ill_request.bib_id %]" target="_blank">[% ill_request.title %]</a></td>
+                                            <td class="req_library">
+                                            [% FOREACH lib IN ill_libraries %]
+                                                [% IF ill_request.requesting_library == lib.sigel %]
+                                                    <a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% lib.searchstr %]">[% lib.sigel %] - [% lib.libraryname %]</a>
+                                                [% END %]
+                                            [% END %]
+                                            
+                                            </td>                                        
+                                            <td class="ill_status">[% ill_request.status %]</td>
+                                            <td style="text-align: center;"><button class="btn btn-xs btn-primary" onclick="window.open('https://iller.libris.kb.se/librisfjarrlan/api/illrequests/[% decoded.library_code %]/[% ill_request.lf_number %]?format=pdf')">Öppna PDF</button></td>
+                                            <td style="text-align: center;"><button class="adresslapplink btn btn-xs btn-primary" data="[% ill_request.requesting_library %]">Skriv ut</button></td>
+                                            [% IF NOT archive %] <td><button class="behandla btn btn-xs btn-success" data-bs-toggle="modal" data-bs-target="#behandlaModal" data="[% ill_request.request_id	%]" timestamp="[% ill_request.last_modified %]">Öppna</a></td> [% END %]
                                         </tr>
                                         [% END %]
                                     </tbody>
@@ -112,7 +119,7 @@
     [% INCLUDE 'columns_settings.inc' %]
     [% INCLUDE "$plugin_dir/librisill_js.inc" %]
     <script>
-
+    
         new DataTable('#ill_incomings_table', {
             ordering: true,
             order: [
