@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.2.8";
+our $VERSION = "0.2.9";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -56,7 +56,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2025-11-05",
+    date_updated    => "2025-11-06",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -1079,6 +1079,9 @@ sub librisill_incomings {
     my $orig_data;
     my $update_data;
     my $decoded;
+    my @ill_libraries;    
+    my @ill_sigels;
+    my $ill_requests;
 
     my $libris_key = getLibrisKey( $self );
 
@@ -1116,6 +1119,37 @@ sub librisill_incomings {
         }
 
         $decoded = $orig_data;
+
+        $ill_requests = $decoded->{'ill_requests'};
+
+        if ( $decoded->{'count'} > 0 ) {
+
+            $ill_requests = $decoded->{'ill_requests'};
+
+            for my $ill ( @$ill_requests ) {
+                push (@ill_sigels, $ill->{'requesting_library'}) unless $ill->{'requesting_library'} ~~ @ill_sigels;
+            }
+
+            my $sigel = join("," , @ill_sigels);
+
+            my $libdataJSON = getlibdata( $self, $sigel);
+            my $libdata = decode_json( $libdataJSON );
+            my $lib = $libdata->{'libraries'};
+
+            for my $li ( @$lib ) {
+
+                my $searchstr = $li->{'name'};
+                $searchstr =~ s/ /+/g;
+
+                push (@ill_libraries, {
+                    sigel             => $li->{'library_code'},
+                    libraryname       => $li->{'name'},
+                    library_id        => $li->{'library_id'},
+                    searchstr         => $searchstr,
+                });
+            }
+        }
+        
     }
 
     $template->param(    
@@ -1123,6 +1157,7 @@ sub librisill_incomings {
         action                         => $action,
         archive                        => $archive,
         sigil                          => $sigil,
+        ill_libraries                  => \@ill_libraries,
         errormessage                   => $errormessage,
         plugin_dir                     => $self->bundle_path,
     );
