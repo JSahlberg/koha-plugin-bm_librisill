@@ -138,7 +138,9 @@
                             </li>
                             <li style="padding-top: 30px;">
                                 <label>Notering:</label>
-                                <input name="itemnotes" class="itemnotes" type="text" maxlength="9999" value="" autofocus>
+                                <input name="itemnotes" id="reply_notes" class="itemnotes" type="text" maxlength="9999" value="" autofocus>
+                                <a href="#" class="not_preReply"><span class="badge text-bg-primary">Öppen lånetid</span></a>
+                                <a href="#" class="not_preReply"><span class="badge text-bg-primary">Skall åter: </span></a>
                             </li>
                             <li>
                                 <label>Streckkod:</label>
@@ -174,16 +176,16 @@
                 "lengthMenu" : "_MENU_ poster per sida",
                 "info" : "Visar _START_ till _END_ av _TOTAL_ poster",
             }
-        });       
+        });
 
-
+        
         $('.behandla').on('click', function() {
 
             $('#behandlaModal .itemnumber').val( $(this).attr('itemnumber') );
             $('#behandlaModal .active_library').val( $(this).closest('tr').find('.ill_active_library a').attr('data') );
             $('#behandlaModal .ill_id').val( $(this).attr('ill_id') );
             $('#behandlaModal .modal_ill_id').text( $(this).attr('ill_id') );
-            $('#behandlaModal .modal_title').text( $(this).closest('tr').find('.ill_title').text() );
+            $('#behandlaModal .modal_title').text( $(this).closest('tr').find('.ill_title').text().substr(0, 100) );
             $('#behandlaModal .modal_author').text( $(this).closest('tr').find('.ill_author').text() );
             $('#behandlaModal .itemnotes').val( $(this).attr('itemnotes') );
             $('#behandlaModal .ill_barcode').val( $(this).attr('barcode') );
@@ -270,6 +272,11 @@
 
         $(document).ready(function() {
 
+            $('.not_preReply').on('click', function(event) {
+                event.preventDefault();
+                $('#reply_notes').val($(this).text()).change().focus();
+            });
+
             $('.ill_status').each(function() {
                 if ($(this).html().includes('Levererad')) {
                     $(this).attr('style', 'background-color:rgb(204, 255, 200) !important');
@@ -309,3 +316,4 @@
 [% END %]
 
 [% INCLUDE 'intranet-bottom.inc' %]
+-
