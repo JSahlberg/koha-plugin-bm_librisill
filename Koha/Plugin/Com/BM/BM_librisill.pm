@@ -1141,11 +1141,14 @@ sub librisill_incomings {
                 my $searchstr = $li->{'name'};
                 $searchstr =~ s/ /+/g;
 
+                my $sigelLength = length($li->{'library_code'});
+
                 push (@ill_libraries, {
                     sigel             => $li->{'library_code'},
                     libraryname       => $li->{'name'},
                     library_id        => $li->{'library_id'},
                     searchstr         => $searchstr,
+                    length            => $sigelLength,
                 });
             }
         }
