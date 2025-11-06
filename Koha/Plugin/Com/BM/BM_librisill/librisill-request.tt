@@ -89,8 +89,11 @@
           <div class="modal-header">
             <h1 class="modal-title" id="importSubmittedModalLabel">Import av post</h1>
           </div>
-          <div class="modal-body">
-            <p>Import pågår...</p>
+          <div class="modal-body">        
+            <div class="d-flex align-items-center">
+              <strong role="status">Importerar...</strong>
+              <div class="spinner-border ms-auto" aria-hidden="true"></div>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Stäng</button>            
