@@ -70,7 +70,7 @@
                                             <td class="ill_status">[% ill_request.status %]</td>
                                             <td style="text-align: center;"><button class="btn btn-xs btn-primary" onclick="window.open('https://iller.libris.kb.se/librisfjarrlan/api/illrequests/[% decoded.library_code %]/[% ill_request.lf_number %]?format=pdf')">Öppna PDF</button></td>
                                             <td style="text-align: center;"><button class="adresslapplink btn btn-xs btn-primary" data="[% ill_request.requesting_library %]">Skriv ut</button></td>
-                                            [% IF NOT archive %] <td><button class="behandla btn btn-xs btn-success" data-bs-toggle="modal" data-bs-target="#behandlaModal" data="[% ill_request.request_id	%]" timestamp="[% ill_request.last_modified %]">Öppna</a></td> [% END %]
+                                            [% IF NOT archive %] <td style="text-align: center;"><button class="behandla btn btn-xs btn-success" data-bs-toggle="modal" data-bs-target="#behandlaModal" data="[% ill_request.request_id	%]" timestamp="[% ill_request.last_modified %]">Öppna</a></td> [% END %]
                                         </tr>
                                         [% END %]
                                     </tbody>
