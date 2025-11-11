@@ -1,7 +1,5 @@
 # Custom ILL module for Koha and Libris (For Swedish Libraries only)
 
-![Navbar of ILL](ILL_bar.jpg)
-
 ## Installation:
 
 1.  Ladda ned senaste releasen här: https://github.com/JSahlberg/koha-plugin-bm_librisill/releases
@@ -34,9 +32,16 @@
 2.  Klicka på **Spara**
 
 
-## Funktioner:
+## Funktioner för Fjärrlån in:
 
-### Fjärrlåneförfrågningar
+### Importera fjärrlån
+
+Här visas de senaste fjärrlånen som gjorts på Libris Fjärrlån.
+För att importera lånet in i Koha så klickar på man på **Behandla**.
+En ny sida visas med informationen om fjärrlånet.
+Klicka på **Importera och reservera** för att automatiskt importera in posten från Libris och reservera på låntagaren.
+
+### Ankomstregistrera
 
 Här visas de aktuella fjärrlån man har importerat och skapat reserverationer på som ännu inte anlänt.
 
@@ -44,27 +49,23 @@ Här visas de aktuella fjärrlån man har importerat och skapat reserverationer 
 
 Här är de fjärrlån som är utlånade till låntagare.
 
-### Importera fjärrlån (Libris)
+### Borttagna fjärrlån
 
-Här visas de senaste fjärrlånen som gjorts på Libris Fjärrlån.
-För att importera lånet in i Koha så klickar på man på **Behandla**.
-En ny sida visas med informationen om fjärrlånet.
-Klicka på **Importera och reservera** för att automatiskt importera in posten från Libris och reservera på låntagaren.
+Här visas de fjärrlån man har haft registrerade och tagit bort från katalogen.
+Man kan använda sig av sökrutan för att lätt hitta titeln man söker.
 
-### Nya inkommande fjärrlån (Libris)
+## Funktioner för Fjärrlån ut:
+
+### Fjärrlåneförfrågningar
 
 Här visas de obehandlade förfrågningarna som kommer från andra bibliotek som vill låna.
 Tryck på **Behandla** för att öppna förfrågan.
 Välj åtgärd och skriv in ev meddelande och om den kan ev reserveras om utlånad.
 Klicka sedan på **Skicka** för att registrera på Libris fjärrlån.
 
-### Arkiverade inkommande fjärrlån (Libris)
+### Arkiverade förfrågningar
 
 Här visas de förfrågningarna som har blivit behandlade.
-
-### Sök borttagna fjärrlån
-
-Här kan man söka på de fjärrlån man har haft registrerade och tagit bort från katalogen.
 
 
 ## Kontakt
