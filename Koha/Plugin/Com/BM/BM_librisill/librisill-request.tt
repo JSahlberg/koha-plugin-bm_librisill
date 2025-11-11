@@ -24,9 +24,10 @@
       <div class="col-sm-12">
         <main>
           <div class="row">
-            <div class="col-md-10 offset-md-1 col-lg-10 offset-lg-1">
+            <div class="col-md-10 order-md-2 order-sm-1">
+
               <h1>Fjärrlånestatus för [% decoded.ill_requests.0.lf_number %]</h1>
-              [% INCLUDE "$plugin_dir/ill_toolbar.inc" %]
+
               <div class="page-section" style="max-width: 700px;">
                 <table class="table table-hover table-light">
                   <tr>
@@ -77,6 +78,11 @@
                 [% IF decoded.ill_requests.0.bib_id.length > 0 %]<a bib_id="[% decoded.ill_requests.0.bib_id %]" borrower="[% decoded.ill_requests.0.user_id %]" class="btn btn-primary import" >Importera[% IF patron.borrowernumber.length > 0 %] och reservera[% END %]</a>[% END %]
               </p>
             </div> <!-- /.col-sm-10.col-sm-push-2 -->
+            <div class="col-md-2 order-sm-2 order-md-1">
+              <aside>
+                [% INCLUDE "$plugin_dir/ill_toolbar.inc" %]
+              </aside>
+            </div> <!-- /.col-md-2.order-md-1 --> 
           </div> <!-- /.row -->
         </main>
       </div> <!-- /.col-sm-12 -->
