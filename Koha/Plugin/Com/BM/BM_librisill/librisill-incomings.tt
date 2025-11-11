@@ -24,11 +24,13 @@
             <div class="col-sm-12">
                 <main>
                     <div class="row">
-                        <div class="col-md-10 offset-md-1 col-lg-10 offset-lg-1">
+                        <div class="col-md-10 order-md-2 order-sm-1">
                         
-                            <h1>Fjärrlån - Inkommande förfrågningar från Libris</h3>
-                            
-                            [% INCLUDE "$plugin_dir/ill_toolbar.inc" %]
+                            [% IF archive %]
+                            <h1>Fjärrlån ut - Arkiverade förfrågningar</h3>
+                            [% ELSE %]
+                            <h1>Fjärrlån ut - Fjärrlåneförfrågningar</h3>
+                            [% END %]
                             
                             [% IF NOT errormessage %]
                             
@@ -68,7 +70,8 @@
                                             
                                             </td>                                        
                                             <td class="ill_status">[% ill_request.status %]</td>
-                                            <td style="text-align: center;"><button class="btn btn-xs btn-primary" onclick="window.open('https://iller.libris.kb.se/librisfjarrlan/api/illrequests/[% decoded.library_code %]/[% ill_request.lf_number %]?format=pdf')">Öppna PDF</button></td>
+                                            <!-- <td style="text-align: center;"><button class="btn btn-xs btn-primary plocklapp" librarycode="[% decoded.library_code %]" lfnumber="[% ill_request.lf_number %]">Öppna PDF</button></td> <!-- onclick="window.open('https://iller.libris.kb.se/librisfjarrlan/api/illrequests/[% decoded.library_code %]/[% ill_request.lf_number %]?format=pdf')-->
+                                            <td style="text-align: center;"><a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=flstatus&ill_id=[% ill_request.lf_number %]" target="_blank">Öppna PDF</a></td>
                                             <td style="text-align: center;"><button class="adresslapplink btn btn-xs btn-primary" data="[% ill_request.requesting_library %]">Skriv ut</button></td>
                                             [% IF NOT archive %] <td style="text-align: center;"><button class="behandla btn btn-xs btn-success" data-bs-toggle="modal" data-bs-target="#behandlaModal" data="[% ill_request.request_id	%]" timestamp="[% ill_request.last_modified %]">Öppna</a></td> [% END %]
                                         </tr>
@@ -90,6 +93,11 @@
                             [% END %]
                         
                         </div> <!-- /.col-sm-10.col-sm-push-2 -->
+                        <div class="col-md-2 order-sm-2 order-md-1">
+                            <aside>
+                                [% INCLUDE "$plugin_dir/ill_toolbar.inc" %]
+                            </aside>
+                        </div> <!-- /.col-md-2.order-md-1 -->                            
                     </div> <!-- /.row -->
                 </main>
             </div> <!-- /.col-sm-12 -->
@@ -133,6 +141,36 @@
                 "info" : "Visar _START_ till _END_ av _TOTAL_ poster",
             }
         }); 
+
+        $('.plocklapp').on('click', function(event) {
+
+            event.preventDefault();
+            console.log('Plocklapp!');
+
+            var library_code = $(this).attr('librarycode');
+            var lfnumber = $(this).attr('lfnumber');
+
+            $.ajax({
+                type: "GET",
+                cache: true,
+                crossDomain: true,                
+                headers: {
+                    Accept: "application/json;"
+                },
+                url: `https://iller.libris.kb.se/librisfjarrlan/api/illrequests/${library_code}/${lfnumber}`,
+                success: function (response) {
+                    console.log(response);
+                    window.open(`https://iller.libris.kb.se/librisfjarrlan/api/illrequests/${library_code}/${lfnumber}?format=pdf`);
+                },
+                error: function(response) {
+                    console.log(response);
+                    alert('Logga in på Libris fjärrlån först.');
+                    
+                }
+            });
+
+
+        });
 
         $('.behandla').on('click', function() {
             var order_id = $(this).attr('data');
