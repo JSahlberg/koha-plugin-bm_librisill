@@ -9,7 +9,7 @@
 [% PROCESS 'i18n.inc' %]
 [% SET footerjs = 1 %]
 [% INCLUDE 'doc-head-open.inc' %]
-<title>Fjärrlån - Importera</title>
+<title>Fjärrlån - Importera från Libris</title>
 [% INCLUDE 'doc-head-close.inc' %]
 <style> p { margin-top: 0; }</style>
 </head>
@@ -24,10 +24,9 @@
       <div class="col-sm-12">
         <main>
           <div class="row">
-            <div class="col-md-10 offset-md-1 col-lg-10 offset-lg-1">
-              <h1>Fjärrlån - Importera från Libris</h3>
-              [% INCLUDE "$plugin_dir/ill_toolbar.inc" %]
-
+            <div class="col-md-10 order-md-2 order-sm-1">
+              <h1>Fjärrlån in - Importera från Libris</h3>
+              
               [% IF NOT decoded.count < 1 %]
 
               <div class="page-section">
@@ -61,6 +60,11 @@
                 </div>
               [% END %]
             </div> <!-- /.col-sm-10.col-sm-push-2 -->
+            <div class="col-md-2 order-sm-2 order-md-1">
+              <aside>
+                [% INCLUDE "$plugin_dir/ill_toolbar.inc" %]
+              </aside>
+            </div> <!-- /.col-md-2.order-md-1 -->
           </div> <!-- /.row -->
         </main>
       </div> <!-- /.col-sm-12 -->
@@ -86,27 +90,7 @@
         "lengthMenu" : "_MENU_ poster per sida",
         "info" : "Visar _START_ till _END_ av _TOTAL_ poster",
       }
-    }); 
-
-    $('.import').each(function () {
-        $(this).click(function (event) {
-            event.preventDefault();
-            PopupZ3950("", $(this).attr('data'));
-            return false;
-        });
-    });
-    
-    function PopupZ3950(fw, bib_id) {
-        var strQuery = GetZ3950Terms(fw);
-        if(strQuery){
-        window.open("/cgi-bin/koha/cataloguing/z3950_search.pl?biblionumber=0&stdid=" + bib_id + "&z3950_1=1&op=do_search&id=1","z3950search",'width=800,height=500,location=yes,toolbar=no,scrollbars=yes,resize=yes');
-        }
-    }
-
-    function GetZ3950Terms(fw){
-        var strQuery="&frameworkcode=" + fw;
-        return strQuery;
-    }    
+    });  
 
   </script>
 [% END %]
