@@ -194,7 +194,14 @@ sub getLibrisKey {
 
 
 sub flstatus {
-    my ( $self, $ill_id, $start, $end ) = @_;
+    my ( $self, $ill_id, $pdf, $start, $end ) = @_;
+
+    my $query = new CGI;
+
+    if ($query->param('ill_id')) {
+        $ill_id = $query->param('ill_id');
+        $pdf = 1;
+    }
     
     my $branch;
     if (C4::Context->userenv) {
@@ -226,10 +233,13 @@ sub flstatus {
     # Build the url
     my $url;    
     
-    if (length($ill_id) > 1) {
-        $url = "$protocol://$host/$string/$branch_fixed/$ill_id";
+    if ($pdf == 1) {
+        $url = "$protocol://$host/$string/$branch_fixed/$ill_id?format=pdf";
 
         warn "med ILL_id"
+    } elsif (length($ill_id) > 1) {
+        $url = "$protocol://$host/$string/$branch_fixed/$ill_id";
+        warn "PDF!"
     } else {
         $url = "$protocol://$host/$string/$branch_fixed/outgoing?start_date=$start&end_date=$end";
         warn "EJ ILL_id"
@@ -240,11 +250,25 @@ sub flstatus {
 
     $request->header( 'api-key' => $libris_key );
 
-    my $response = $ua->request($request);
+    if ($pdf == 1) {
 
-    my $jsonString = $response->content;
+        
+        $request->header( 'content-type' => 'application/pdf' );
 
-    return $jsonString;
+        my $response = $ua->request($request);
+
+        #warn "Response: " . $response->content;
+        print "Content-Type: application/pdf\n";
+        print $response->content;
+
+    } else {
+        
+        my $response = $ua->request($request);
+
+        my $jsonString = $response->content;
+
+        return $jsonString;
+    }
 
 }
 
@@ -399,7 +423,9 @@ ORDER BY items.dateaccessioned DESC
 
             my $ill_id = "0";
 
-            my $statuses = flstatus( $self, $ill_id, $start, $end );
+            my $pdf = 0;
+
+            my $statuses = flstatus( $self, $ill_id, $pdf, $start, $end );
 
             my $status_decoded = decode_json( $statuses );
 
@@ -696,7 +722,9 @@ ORDER BY items.dateaccessioned DESC
 
             my $ill_id = "0";
 
-            my $statuses = flstatus( $self, $ill_id, $start, $end );
+            my $pdf = 0;
+
+            my $statuses = flstatus( $self, $ill_id, $pdf, $start, $end );
 
             my $status_decoded = decode_json( $statuses );
 
