@@ -9,7 +9,7 @@
 [% PROCESS 'i18n.inc' %]
 [% SET footerjs = 1 %]
 [% INCLUDE 'doc-head-open.inc' %]
-<title>Fjärrlån - Beställningar</title>
+<title>Fjärrlån - Utlånade fjärrlån</title>
 [% INCLUDE 'doc-head-close.inc' %]
 <style> p { margin-top: 0; }</style>
 </head>
@@ -24,11 +24,9 @@
         <div class="col-sm-12">
             <main>
                 <div class="row">
-                    <div class="col-md-10 offset-md-1 col-lg-10 offset-lg-1">
+                    <div class="col-md-10 order-md-2 order-sm-1">
 
-                        <h1>Utlånade fjärrlån</h1>
-                        
-                        [% INCLUDE "$plugin_dir/ill_toolbar.inc" %]
+                        <h1>Fjärrlån in - Utlånade fjärrlån</h1>
                         
                         <div class="page-section">
                             [% IF ( total > 0 ) %]
@@ -102,6 +100,11 @@
                         </div>
                         [% END %]
                     </div> <!-- /.col-sm-10.col-sm-push-2 -->
+                    <div class="col-md-2 order-sm-2 order-md-1">
+                        <aside>
+                            [% INCLUDE "$plugin_dir/ill_toolbar.inc" %]
+                        </aside>
+                    </div> <!-- /.col-md-2.order-md-1 -->
                 </div> <!-- /.row -->
             </main>
         </div> <!-- /.col-sm-12 -->
