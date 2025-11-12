@@ -147,13 +147,13 @@
                     $('#importSubmittedModal .modal-body').html('<p style="color: green;">Import genomförd!</p><p>Låntagare saknas, ingen reservation gjord.</p>');                  
                     const importmodal = document.getElementById('importSubmittedModal')
                     importmodal.addEventListener('hidden.bs.modal', event => {
-                      window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=searchILL';
+                      window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=receive_ILL';
                     });                  
                   } else {
                     $('#importSubmittedModal .modal-body').html('<p style="color: green;">Import och reservation genomförd!</p>');                  
                     const importmodal = document.getElementById('importSubmittedModal')
                     importmodal.addEventListener('hidden.bs.modal', event => {
-                      window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=searchILL';
+                      window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=receive_ILL';
                     });                  
                   }                  
                 }
