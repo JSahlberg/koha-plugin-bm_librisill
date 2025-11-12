@@ -125,6 +125,33 @@
             }
         });
 
+        
+        $('.delete_ill').on('click', function(e) {
+
+            if ( confirm('Är du helt säker att du vill ta bort detta fjärrlån och reservation?')) {
+
+                var biblionumber = $(this).attr('biblionumber');
+                var itemnumber = $(this).attr('itemnumber');
+                var borrowernumber = $(this).attr('borrowernumber');
+
+                var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=delete_ILL&biblionumber=${biblionumber}&itemnumber=${itemnumber}&borrowernumber=${borrowernumber}`;
+
+                $.ajax({
+                    url: `${url}`,
+                    contentType: "application/json;charset=UTF-8",
+                    cache: true,
+                }).done(function (data) {
+                    if ( data.error == '0' ) {                        
+                        console.log('Borttagen!');
+                        window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=return_ILL';
+                    } else {
+                        alert('Fel: Gick inte att ta bort.');
+                    }
+                });
+            }
+        });    
+
+
         $('.adresslapplink').each(function () {
             var sigel = $(this).attr('data');
             $(this).on('click', function (event) {
@@ -132,7 +159,6 @@
                 printDiv(sigel);
             });
         });
-    
 
 
         function printDiv(sigel) {
