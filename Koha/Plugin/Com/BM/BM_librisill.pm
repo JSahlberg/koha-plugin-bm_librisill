@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.5.0";
+our $VERSION = "0.5.2";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -56,7 +56,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2025-11-11",
+    date_updated    => "2025-11-12",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -83,11 +83,11 @@ sub intranet_js {
     return q|
         <script>           
 
-            var searchILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=searchILL';
+            var receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=receive_ILL';
 
             $(`
                 <li class="nav-item">
-                    <a class="nav-link" href="${searchILL_link}">
+                    <a class="nav-link" href="${receive_ILL_link}">
                         <span class="nav-link-text">Fjärrlån</span>
                     </a>
                 </li>
@@ -96,7 +96,7 @@ sub intranet_js {
             if ($('#main_intranet-main').length) {
                 $('.biglinks-list:first').append(`
                     <li>
-                    <a class="icon_general icon_fjarrlan" href="${searchILL_link}">
+                    <a class="icon_general icon_fjarrlan" href="${receive_ILL_link}">
                         <i class="fa fa-fw fa fa-envelope"></i>
                     Fjärrlån
                     </a>
@@ -235,11 +235,8 @@ sub flstatus {
     
     if ($pdf == 1) {
         $url = "$protocol://$host/$string/$branch_fixed/$ill_id?format=pdf";
-
-        warn "med ILL_id"
     } elsif (length($ill_id) > 1) {
         $url = "$protocol://$host/$string/$branch_fixed/$ill_id";
-        warn "PDF!"
     } else {
         $url = "$protocol://$host/$string/$branch_fixed/outgoing?start_date=$start&end_date=$end";
         warn "EJ ILL_id"
@@ -251,7 +248,6 @@ sub flstatus {
     $request->header( 'api-key' => $libris_key );
 
     if ($pdf == 1) {
-
         
         $request->header( 'content-type' => 'application/pdf' );
 
@@ -265,7 +261,7 @@ sub flstatus {
         
         my $response = $ua->request($request);
 
-        my $jsonString = $response->content;
+        my $jsonString = $response->content;        
 
         return $jsonString;
     }
@@ -274,14 +270,14 @@ sub flstatus {
 
 
 
-sub searchILL {
+sub receive_ILL {
     my ( $self, $args ) = @_;
 
     my $query = CGI->new;
 
     my ( $template, $loggedinuser, $cookie, $flags ) = get_template_and_user(
         {
-            template_name   => $self->mbf_path("search_ill.tt"),
+            template_name   => $self->mbf_path("receive_ill.tt"),
             query           => $query,
             type            => "intranet",
             flagsrequired   => { circulate => "circulate_remaining_permissions" },
@@ -369,6 +365,7 @@ ORDER BY items.dateaccessioned DESC
     
     my $ill_requests = ();
     my @ill_libraries = ();
+    my $statuses;
 
     my $error;
 
@@ -425,7 +422,9 @@ ORDER BY items.dateaccessioned DESC
 
             my $pdf = 0;
 
-            my $statuses = flstatus( $self, $ill_id, $pdf, $start, $end );
+            $statuses = flstatus( $self, $ill_id, $pdf, $start, $end );
+
+            warn "Statuses: " . $statuses;
 
             my $status_decoded = decode_json( $statuses );
 
@@ -479,6 +478,7 @@ ORDER BY items.dateaccessioned DESC
         ill_mappings    => \@ill_mappings,
         ill_requests    => $ill_requests,
         ill_libraries   => \@ill_libraries,
+        statuses        => $statuses,
         total           => $total,
         errormessage    => $error,
         plugin_dir      => $self->bundle_path,
@@ -787,7 +787,220 @@ ORDER BY items.dateaccessioned DESC
 }
 
 
-sub deleted_ill {
+sub return_ILL {
+    my ( $self, $args ) = @_;
+
+    my $query = CGI->new;
+
+    my ( $template, $loggedinuser, $cookie, $flags ) = get_template_and_user(
+        {
+            template_name   => $self->mbf_path("return_ill.tt"),
+            query           => $query,
+            type            => "intranet",
+            flagsrequired   => { circulate => "circulate_remaining_permissions" },
+        }
+    );    
+
+    my $branch;
+    if (C4::Context->userenv) {
+        $branch = C4::Context->userenv->{'branch'};
+    }
+    my $branch_fixed = join '', map { ucfirst lc $_ } split /(\s+)/, $branch;
+
+    my $ill_id_offset = length( $branch_fixed ) + 12;
+    
+    warn "Offset: " . $ill_id_offset;
+
+    my $itemtype = $self->retrieve_data('itemtype');
+    my $ccode = $self->retrieve_data('ccode');
+    my $notforloan = $self->retrieve_data('notforloan');
+
+    my $dbh   = C4::Context->dbh;
+
+    my $ills = $dbh->selectall_arrayref("
+
+SELECT DISTINCT 
+    items.dateaccessioned,
+    items.itemnumber,
+    old_issues.returndate,
+    old_issues.renewals_count,
+    biblio.biblionumber,
+    biblio.title,
+    biblio.author,
+    borrowers.borrowernumber,
+    borrowers.surname,
+    borrowers.firstname,    
+    CASE
+        
+        WHEN items.homebranch='$branch_fixed' AND LOCATE ('$branch_fixed-', itemnotes_nonpublic) > 0
+        THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('$branch_fixed-', itemnotes_nonpublic), $ill_id_offset)
+
+    ELSE
+        NULL
+    END
+            
+FROM 
+    items
+    LEFT JOIN biblio ON (biblio.biblionumber=items.biblionumber)
+    LEFT JOIN issues ON (issues.itemnumber=items.itemnumber)
+    LEFT JOIN old_issues ON (old_issues.itemnumber=items.itemnumber)
+    LEFT JOIN borrowers ON (borrowers.borrowernumber=old_issues.borrowernumber)
+    LEFT JOIN reserves ON (reserves.biblionumber=items.biblionumber)
+    
+WHERE 
+    items.itype = '$itemtype'
+    AND items.notforloan = '0'
+    AND items.onloan IS NULL
+    AND items.homebranch = '$branch'
+    AND reserves.reserve_id IS NULL
+    
+ORDER BY items.dateaccessioned DESC
+
+    ;");
+
+    my @ill_mappings = ();
+    my @items = ();
+
+    my $error;
+    
+    for my $ill (@$ills) {
+
+        my $item = Koha::Items->find( $ill->[1] );
+
+        push @ill_mappings, {
+            dateaccessioned => $ill->[0],
+            itemnumber => $ill->[1],
+            returndate => $ill->[2],
+            renewals_count => $ill->[3],
+            biblionumber => $ill->[4],
+            title => $ill->[5],
+            author => $ill->[6],
+            borrowernumber => $ill->[7],
+            surname => $ill->[8],
+            firstname => $ill->[9],
+            ill_id => $ill->[10],
+        };        
+    }
+
+    my $total = scalar @ill_mappings;
+    my $ill_requests = ();
+    my @ill_libraries = ();
+    my @ill_ids = ();
+    
+
+    if ( $total > 0 ) {
+
+        for my $id ( @ill_mappings ) {
+
+            if ( $id->{ill_id} ) {
+            
+                my $sigellength = length($id->{ill_id}) - 12;
+
+                push @ill_ids, {
+                    date => '20' . substr($id->{ill_id}, ($sigellength + 1), 2) . '-' . substr($id->{ill_id}, ($sigellength + 3), 2) . '-' . substr($id->{ill_id}, ($sigellength + 5), 2),
+                }
+            } else {
+                warn "No ID!";
+            }
+        }
+
+        warn "Length of IDs: " . scalar @ill_ids ;
+
+        my $start;
+        my $end;
+
+
+        if ( scalar @ill_ids > 0 ) {
+            @ill_ids = sort { $b->{date} cmp $a->{date} } @ill_ids;
+        
+            $end = $ill_ids[0]->{date};
+            if ( $total == 1 ) {
+                $start = $end;
+            } else {
+                $start = $ill_ids[-1]->{date};
+            }
+
+            warn "Start and end: " . $start . ' | ' . $end;
+            
+            my @pos = ('8','5');
+            
+            for my $po (@pos) {
+                if (substr($end, $po, 1 ) eq '0') {
+                    substr($end, $po, 1 ) = "";
+                }
+                if (substr($start, $po, 1 ) eq '0') {
+                    substr($start, $po, 1 ) = "";
+                }
+            }
+
+            my $ill_id = "0";
+
+            my $pdf = 0;
+
+            my $statuses = flstatus( $self, $ill_id, $pdf, $start, $end );
+
+            my $status_decoded = decode_json( $statuses );
+
+            if ( $status_decoded->{'error'} ) {
+                $error = $status_decoded->{'error'};
+                warn "Error: " . $error;
+            } else {
+
+                $ill_requests = $status_decoded->{'ill_requests'};
+
+                my @ill_sigels;
+
+                for my $ill ( @$ill_requests ) {
+                    if ( grep{$_->{'ill_id'} eq $ill->{'lf_number'}} @ill_mappings )  {
+                        unless (grep{$_ eq $ill->{'active_library'}} @ill_sigels) {
+                            push (@ill_sigels, $ill->{'active_library'});
+                            warn "Ill sigel: " . $ill->{'active_library'};
+                        }
+                    }
+                }
+            
+                my $sigel = join("," , @ill_sigels);
+
+                my $libdataJSON = getlibdata( $self, $sigel);
+                my $libdata = decode_json( $libdataJSON );
+                my $lib = $libdata->{'libraries'};
+
+                for my $ill ( @$ill_requests ) {
+
+                    if ( grep{$_->{'ill_id'} eq $ill->{'lf_number'}} @ill_mappings )  {
+
+                        for my $li ( @$lib ) {
+
+                            if ( $li->{'library_code'} eq $ill->{'active_library'}) {
+                                push (@ill_libraries, {
+                        
+                                    sigel        => $ill->{'active_library'},
+                                    libraryname  => $li->{'name'},
+                                    library_id   => $li->{'library_id'},
+                        
+                                }) unless grep{$_->{'sigel'} eq $ill->{'active_library'}} @ill_libraries;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    $template->param(
+        ill_mappings    => \@ill_mappings,
+        ill_requests    => $ill_requests,
+        ill_libraries   => \@ill_libraries,
+        total           => $total,
+        errormessage    => $error,
+        plugin_dir      => $self->bundle_path,
+    );
+
+    output_html_with_http_headers $query, $cookie, $template->output;    
+}
+
+
+sub deleted_ILL {
     my ( $self, $args ) = @_;
 
     my $query = CGI->new;
@@ -952,7 +1165,6 @@ sub librisill_requests {
     );
 
     output_html_with_http_headers $query, $cookie, $template->output;
-
 
 }
 
@@ -1498,5 +1710,4 @@ sub _append_to_field {
 }
 
 1;
-
 
