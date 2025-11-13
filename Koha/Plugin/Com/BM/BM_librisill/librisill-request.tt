@@ -115,18 +115,6 @@
 
   <script>
 
-      /*
-      $('.import').each(function () {
-          $(this).click(function (event) {
-              event.preventDefault();
-              var illjson = [% ill_JSON %];    
-              localStorage.setItem('latest_ill', JSON.stringify(illjson));
-              PopupZ3950("", $(this).attr('data'));
-              return false;
-          });
-      });
-      */
-
       $('.import').each(function () {
           $(this).click(function (event) {
               event.preventDefault();
@@ -177,3 +165,4 @@
 [% END %]
 
 [% INCLUDE 'intranet-bottom.inc' %]
+
