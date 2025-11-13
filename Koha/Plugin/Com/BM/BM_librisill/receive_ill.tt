@@ -178,6 +178,10 @@
                 "search" : "Sök:",
                 "lengthMenu" : "_MENU_ poster per sida",
                 "info" : "Visar _START_ till _END_ av _TOTAL_ poster",
+            },
+            layout: {
+                "topStart" : "search",
+                "topEnd" : "pageLength",                
             }
         });
 
@@ -319,4 +323,3 @@
 [% END %]
 
 [% INCLUDE 'intranet-bottom.inc' %]
--
