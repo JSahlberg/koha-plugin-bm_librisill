@@ -49,6 +49,10 @@ Här visas de aktuella fjärrlån man har importerat och skapat reserverationer 
 
 Här är de fjärrlån som är utlånade till låntagare.
 
+### Återlämnade fjärrlån
+
+Här visas de fjärrlån som blivit återlämnade men som inte ännu tagits bort från katalogen.
+
 ### Borttagna fjärrlån
 
 Här visas de fjärrlån man har haft registrerade och tagit bort från katalogen.
