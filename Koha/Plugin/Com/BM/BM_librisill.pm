@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.5.3";
+our $VERSION = "0.5.4";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -56,7 +56,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2025-11-13",
+    date_updated    => "2025-11-17",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -339,6 +339,11 @@ ORDER BY items.dateaccessioned DESC
 
     my @ill_mappings = ();
     my @items = ();
+    my $ill_requests = ();
+    my @ill_libraries = ();
+    my @ill_ids = ();
+    my $statuses;
+    my $error;
     
     for my $ill (@$ills) {
 
@@ -362,15 +367,6 @@ ORDER BY items.dateaccessioned DESC
     }
 
     my $total = scalar @ill_mappings;
-    
-    my $ill_requests = ();
-    my @ill_libraries = ();
-    my $statuses;
-
-    my $error;
-
-    my @ill_ids = ();
-    
 
     if ( $total > 0 ) {
 
@@ -393,7 +389,6 @@ ORDER BY items.dateaccessioned DESC
 
         my $start;
         my $end;
-        
 
         if ( scalar @ill_ids > 0 ) {
             @ill_ids = sort { $b->{date} cmp $a->{date} } @ill_ids;
@@ -482,6 +477,7 @@ ORDER BY items.dateaccessioned DESC
         total           => $total,
         errormessage    => $error,
         plugin_dir      => $self->bundle_path,
+        CLASS           => $self->{'class'},
     );
 
     output_html_with_http_headers $query, $cookie, $template->output;    
@@ -781,6 +777,7 @@ ORDER BY items.dateaccessioned DESC
         total           => $total,
         errormessage    => $error,
         plugin_dir      => $self->bundle_path,
+        CLASS           => $self->{'class'},
     );
 
     output_html_with_http_headers $query, $cookie, $template->output;    
@@ -994,6 +991,7 @@ ORDER BY items.dateaccessioned DESC
         total           => $total,
         errormessage    => $error,
         plugin_dir      => $self->bundle_path,
+        CLASS           => $self->{'class'},
     );
 
     output_html_with_http_headers $query, $cookie, $template->output;    
@@ -1116,6 +1114,7 @@ sub librisill_requests {
     my %users;
     my %lf_numbers;
     my %bib_ids;
+    my @usernames = ();
 
     my $ua = new LWP::UserAgent;
     $ua->agent("Perl API Client/1.0");
@@ -1125,6 +1124,8 @@ sub librisill_requests {
     my $host="iller.libris.kb.se";
     my $protocol="https";
     my $libris_key = getLibrisKey( $self );
+
+    
 
     if ( !$libris_key ) {
         $errormessage = "API-nyckel saknas för sigel";
@@ -1151,6 +1152,34 @@ sub librisill_requests {
         %titles = map { $_->{title} } @{ $decoded->{ill_requests} };
 
         %bib_ids = map { $_->{bib_id} } @{ $decoded->{ill_requests} };
+
+        my $ill_requests = $decoded->{ill_requests};
+
+        for my $ill ( @$ill_requests ) {
+            
+            my $user_id = $ill->{'user_id'};
+
+            my $patron = Koha::Patrons->find( { cardnumber => $user_id } );
+
+            my $patron_id = length($patron);
+
+            my $patron_name = length($patron);
+
+            if ($patron) {
+                $patron_id = $patron->borrowernumber;
+                $patron_name = $patron->surname . ", " . $patron->firstname;
+                # warn "Patronname: " . $patron_name;
+            } else {
+                $patron_id = "";
+                $patron_name = "";            
+            };
+
+            push @usernames, {
+                lf_number      => $ill->{'lf_number'},
+                borrowernumber => $patron_id,
+                name           => $patron_name,
+            }
+        }
     }
 
     $template->param(
@@ -1158,10 +1187,12 @@ sub librisill_requests {
         decoded          => $decoded,
         titles           => %titles,
         users            => %users,
+        usernames        => \@usernames,
         lf_numbers       => %lf_numbers,
         bib_ids          => %bib_ids,
         errormessage     => $errormessage,
         plugin_dir       => $self->bundle_path,
+        CLASS            => $self->{'class'},
     );
 
     output_html_with_http_headers $query, $cookie, $template->output;
@@ -1263,6 +1294,7 @@ sub librisill_request {
         library_codes                  => $library_codes,
         ill_JSON			           => $ill_json,
         plugin_dir                     => $self->bundle_path,
+        CLASS                          => $self->{'class'},
     );
 
     output_html_with_http_headers $query, $cookie, $template->output;
@@ -1403,6 +1435,7 @@ sub librisill_incomings {
         ill_libraries                  => \@ill_libraries,
         errormessage                   => $errormessage,
         plugin_dir                     => $self->bundle_path,
+        CLASS                          => $self->{'class'},
     );
 
     output_html_with_http_headers $query, $cookie, $template->output;
