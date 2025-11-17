@@ -1,4 +1,4 @@
-# Custom ILL module for Koha and Libris (For Swedish Libraries only)
+# Custom Libris ILL module for Koha (For Swedish Libraries only)
 
 ## Installation:
 
