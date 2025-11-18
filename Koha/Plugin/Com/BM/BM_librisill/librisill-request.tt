@@ -9,7 +9,7 @@
 [% PROCESS 'i18n.inc' %]
 [% SET footerjs = 1 %]
 [% INCLUDE 'doc-head-open.inc' %]
-<title>Fjärrlånestatus för [% decoded.ill_requests.0.lf_number %]</title>
+<title>Import av [% decoded.ill_requests.0.lf_number %]</title>
 [% INCLUDE 'doc-head-close.inc' %]
 <style> p { margin-top: 0; }</style>
 </head>
@@ -26,57 +26,60 @@
           <div class="row">
             <div class="col-md-10 order-md-2 order-sm-1">
 
-              <h1>Fjärrlånestatus för [% decoded.ill_requests.0.lf_number %]</h1>
+              <h1>Import av [% decoded.ill_requests.0.lf_number %]</h1>
 
-              <div class="page-section" style="max-width: 700px;">
-                <table class="table table-hover table-light">
-                  <tr>
-                    <td>Beställningsnummer:</td>
-                    <td><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% decoded.ill_requests.0.lf_number %]" target="_blank">[% decoded.ill_requests.0.lf_number %]</a></td>  
-                  </tr>
-                  <tr>
-                    <td>Titel:</td>
-                    <td>[% decoded.ill_requests.0.title %]</td>  
-                  </tr>
-                  <tr>
-                    <td>Författare:</td>
-                    <td>[% decoded.ill_requests.0.author %]</td>  
-                  </tr>
-                  <tr>
-                    <td>Utgivning:</td>
-                    <td>[% decoded.ill_requests.0.imprint %]</td>  
-                  </tr>
-                  <tr>
-                    <td>ISBN/ISSN:</td>
-                    <td>[% decoded.ill_requests.0.isbn_issn %]</td>  
-                  </tr>
-                  <tr>
-                    <td>Libris-ID:</td>
-                    <td>[% decoded.ill_requests.0.bib_id %]</td>  
-                  </tr>
-                  <tr>
-                    <td>Aktivt bibliotek:</td>
-                    <td>[% active_library %]</td>  
-                  </tr>
-                  <tr>
-                    <td>Remisskedja:</td>
-                    <td>[% FOREACH library IN library_arr %][% library %]<br>[% END %]</td>
-                    <!--<td>[% library_codes %]</td> -->
-                  </tr>
-                  <tr>
-                    <td>Låntagare:</td>
-                    <td class="user">[% IF patron.surname.length > 0 %][% patron.surname %], [% patron.firstname %] [% ELSE %] (ej angivet) [% END %] [% IF patron.borrowernumber.length > 0 %]([% patron.borrowernumber %])[% ELSIF decoded.ill_requests.0.user_id > 0 %]<i style="color:#d00">(Ej registrerad låntagare)</i> [% END %]</td>  
-                  </tr>
-                  <tr>
-                    <td>Lånekortsnummer:</td>
-                    <td class="user_id">[% decoded.ill_requests.0.user_id %]</td>  
-                  </tr>
-                </table>
-              </div>
-              <p>
-                [% IF patron.borrowernumber.length > 0 %]<a class="btn btn-primary" href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% decoded.ill_requests.0.user_id %]" target="_blank">Visa låntagare</a>[% END %]
-                [% IF decoded.ill_requests.0.bib_id.length > 0 %]<a bib_id="[% decoded.ill_requests.0.bib_id %]" borrower="[% decoded.ill_requests.0.user_id %]" class="btn btn-primary import" >Importera[% IF patron.borrowernumber.length > 0 %] och reservera[% END %]</a>[% END %]
-              </p>
+              <fieldset class="rows">
+                <ol>
+                  <li>
+                    <label>Beställningsnummer:</label>
+                    <span style="color: green;"><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% decoded.ill_requests.0.lf_number %]" target="_blank">[% decoded.ill_requests.0.lf_number %]</a></span>
+                  </li>
+                  <li>
+                    <label>Titel:</label>
+                    <span>[% decoded.ill_requests.0.title %]</span>
+                  </li>
+                  <li>
+                    <label>Författare:</label>
+                    <span>[% decoded.ill_requests.0.author %]</span>
+                  </li>
+                  <li>
+                    <label>Utgivning:</label>
+                    <span>[% decoded.ill_requests.0.imprint %]</span>
+                  </li>
+                  <li>
+                    <label>ISBN/ISSN:</label>
+                    <span>[% decoded.ill_requests.0.isbn_issn %]</span>
+                  </li>
+                  <li>
+                    <label>Libris-ID:</label>
+                    <span>[% decoded.ill_requests.0.bib_id %]</span>
+                  </li>
+                  <li>
+                    <label>Aktivt bibliotek:</label>
+                    <span>[% active_library %]</span>
+                  </li>
+                  <li>
+                    <label>Remisskedja:</label>
+                    <span style="display: flex;">[% FOREACH library IN library_arr %][% library %]<br>[% END %]</span>
+                  </li>
+                  <li style="margin-top: 30px;">
+                    <label>Låntagare:</label>
+                    <span>[% IF patron.surname.length > 0 %][% patron.surname %], [% patron.firstname %][% END %] [% IF patron.borrowernumber.length > 0 %]([% patron.borrowernumber %])[% ELSIF decoded.ill_requests.0.user_id > 0 %]<i style="color:#d00">(Ej registrerad låntagare)</i> [% END %]</span>
+                  </li>
+                  <li>
+                    <label>Lånekortsnummer:</label>
+                    <span>[% decoded.ill_requests.0.user_id %]</span>
+                  </li>
+                  <li>
+                    <p>
+                      [% IF patron.borrowernumber.length > 0 %]<a class="btn btn-primary" href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% decoded.ill_requests.0.user_id %]" target="_blank">Visa låntagare</a>[% END %]
+                      [% IF decoded.ill_requests.0.bib_id.length > 0 %]<a bib_id="[% decoded.ill_requests.0.bib_id %]" borrower="[% decoded.ill_requests.0.user_id %]" class="btn btn-primary import" >Importera[% IF patron.borrowernumber.length > 0 %] och reservera[% END %]</a>[% END %]
+                    </p>
+                  </li>
+                </ol>    
+              </fieldset>               
+            
+              
             </div> <!-- /.col-sm-10.col-sm-push-2 -->
             <div class="col-md-2 order-sm-2 order-md-1">
               <aside>
