@@ -56,12 +56,12 @@
                   </tr>
                   <tr>
                     <td>Aktivt bibliotek:</td>
-                    <td>[% decoded.ill_requests.0.active_library %]</td>  
+                    <td>[% active_library %]</td>  
                   </tr>
                   <tr>
                     <td>Remisskedja:</td>
-                    <!--<td>[% FOREACH library IN library_codes %]( [% library.library_code %] ) [% END %]</td>-->
-                    <td>[% library_codes %]</td> 
+                    <td>[% FOREACH library IN library_arr %][% library %]<br>[% END %]</td>
+                    <!--<td>[% library_codes %]</td> -->
                   </tr>
                   <tr>
                     <td>Låntagare:</td>
@@ -165,4 +165,3 @@
 [% END %]
 
 [% INCLUDE 'intranet-bottom.inc' %]
-
