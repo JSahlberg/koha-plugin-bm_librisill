@@ -105,7 +105,6 @@ sub intranet_js {
             }            
 
         </script>
-
     |;
     
 }
@@ -476,8 +475,7 @@ ORDER BY items.dateaccessioned DESC
         statuses        => $statuses,
         total           => $total,
         errormessage    => $error,
-        plugin_dir      => $self->bundle_path,
-        CLASS           => $self->{'class'},
+        plugin_dir      => $self->bundle_path,        
     );
 
     output_html_with_http_headers $query, $cookie, $template->output;    
@@ -776,8 +774,7 @@ ORDER BY items.dateaccessioned DESC
         ill_libraries   => \@ill_libraries,
         total           => $total,
         errormessage    => $error,
-        plugin_dir      => $self->bundle_path,
-        CLASS           => $self->{'class'},
+        plugin_dir      => $self->bundle_path,        
     );
 
     output_html_with_http_headers $query, $cookie, $template->output;    
@@ -990,8 +987,7 @@ ORDER BY items.dateaccessioned DESC
         ill_libraries   => \@ill_libraries,
         total           => $total,
         errormessage    => $error,
-        plugin_dir      => $self->bundle_path,
-        CLASS           => $self->{'class'},
+        plugin_dir      => $self->bundle_path,        
     );
 
     output_html_with_http_headers $query, $cookie, $template->output;    
@@ -1191,8 +1187,7 @@ sub librisill_requests {
         lf_numbers       => %lf_numbers,
         bib_ids          => %bib_ids,
         errormessage     => $errormessage,
-        plugin_dir       => $self->bundle_path,
-        CLASS            => $self->{'class'},
+        plugin_dir       => $self->bundle_path,        
     );
 
     output_html_with_http_headers $query, $cookie, $template->output;
@@ -1256,45 +1251,44 @@ sub librisill_request {
     my $patron_name = length($patron);
 
     if ($patron ne undef) {
-    $patron_id = $patron->borrowernumber;
-    $patron_name = $patron->surname . ", " . $patron->firstname;
+        $patron_id = $patron->borrowernumber;
+        $patron_name = $patron->surname . ", " . $patron->firstname;
     } else {
-    $patron_id = "";
-    $patron_name = "";
+        $patron_id = "";
+        $patron_name = "";
     };
 
+    my $active_library_sigel = $decoded->{ill_requests}->[0]->{active_library};
+
+    my $libdataJSON = getlibdata( $self, $active_library_sigel);
+    my $libdata = decode_json( $libdataJSON );
+    my $lib = $libdata->{'libraries'}->[0]->{'name'};
+
+    my $active_library = $active_library_sigel . ' - ' . $lib;
+
     my @library_arr = map { $_->{library_code} } @{ $decoded->{ill_requests}->[0]->{recipients} };
+
+    my $counter =  1;
+
     foreach (@library_arr) {
-        $_ = "+$_";
+        my $libdataJSON = getlibdata( $self, $_);
+        my $libdata = decode_json( $libdataJSON );
+        my $lib = $libdata->{'libraries'}->[0]->{'name'};
+
+        $_ = "$counter. $_ - $lib";
+        $counter++
     }
+
     my $library_codes = scalar "@library_arr";
-
-    my %ill_hash = (
-        author => $decoded->{ill_requests}->[0]->{author},
-        title =>  $decoded->{ill_requests}->[0]->{title},
-        imprint => $decoded->{ill_requests}->[0]->{imprint},
-        bib_id => $decoded->{ill_requests}->[0]->{bib_id},
-        isbn_issn => $decoded->{ill_requests}->[0]->{isbn_issn},
-        user => $decoded->{ill_requests}->[0]->{user},
-        user_id => $decoded->{ill_requests}->[0]->{user_id},
-        active_library => $decoded->{ill_requests}->[0]->{active_library},
-        lf_number => $decoded->{ill_requests}->[0]->{lf_number},
-        library_codes => $library_codes,
-        patron_id => $patron_id,
-        patron_name => $patron_name,
-    );
-
-    my $ill_json = encode_json \%ill_hash;
-
 
     $template->param(
         jsonString                     => $jsonString,
         decoded	                       => $decoded,
         patron                         => $patron,
         library_codes                  => $library_codes,
-        ill_JSON			           => $ill_json,
-        plugin_dir                     => $self->bundle_path,
-        CLASS                          => $self->{'class'},
+        library_arr                    => \@library_arr,
+        active_library                 => $active_library,        
+        plugin_dir                     => $self->bundle_path,        
     );
 
     output_html_with_http_headers $query, $cookie, $template->output;
@@ -1434,8 +1428,7 @@ sub librisill_incomings {
         sigil                          => $sigil,
         ill_libraries                  => \@ill_libraries,
         errormessage                   => $errormessage,
-        plugin_dir                     => $self->bundle_path,
-        CLASS                          => $self->{'class'},
+        plugin_dir                     => $self->bundle_path,        
     );
 
     output_html_with_http_headers $query, $cookie, $template->output;
