@@ -103,7 +103,7 @@
             </div> <!-- /.col-sm-12 -->
         </div> <!-- /.row -->	
 
-        <div class="modal fade" id="behandlaModal" tabindex="-1" role="dialog" aria-labelledby="behandlaModalLabel" aria-hidden="true">
+        <div class="modal modal-lg fade" id="behandlaModal" tabindex="-1" role="dialog" aria-labelledby="behandlaModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -145,6 +145,7 @@
                 "topEnd" : "pageLength",                
             }
         }); 
+        
 
         $('.plocklapp').on('click', function(event) {
 
@@ -172,48 +173,46 @@
                     
                 }
             });
-
-
         });
+
 
         $('.behandla').on('click', function() {
             var order_id = $(this).attr('data');
             var timestamp = $(this).attr('timestamp');
             $('#behandlaModal .modal-body').html(`
-            <table>
-                <tr>
-                    <td>Beställning:</td>
-                    <td>${$(this).closest('tr').find('.lf_number').text()}</td>
-                </tr>
-                <tr>
-                    <td>Titel:</td>
-                    <td>${$(this).closest('tr').find('.ill_title').text()}</td>
-                </tr>
-                <!--<tr>
-                    <td>Fjärrlånande bibliotek:</td>
-                    <td>${$(this).closest('tr').find('.req_library').text()}</td>
-                </tr>-->        
-            </table>
-            
-            <div id="respondill" class="subfield_line" style="padding-top: 15px;">
-                <label for="response_id">Välj åtgärd:</label>
-                <select id="response_id">
-                    <option value="1">Utlånad</option>
-                    <option value="2">Förkommen</option>
-                    <option value="3">Utlånas ej</option>
-                    <option value="4">Finns ej</option>
-                    <option value="5">F n ej tillgänglig</option>
-                    <option value="6">Ej anländ</option>
-                    <option value="7">Reserverad för er</option>
-                    <option value="8">Övrigt</option>
-                    <option value="9" selected>Levererad</option>
-                </select>
-            </div>
-            <br />
-            <label for="response_text">Meddelande:</label>
 
-            <textarea id="response_text" name="response_text" rows="1" cols="50"></textarea>
-            <div style="padding-top: 15px;">
+            <fieldset class="rows">
+                <ol>
+                  <li>
+                    <label>Beställning:</label>
+                    <span style="color: green;">${$(this).closest('tr').find('.lf_number').text()}</span>
+                  </li>
+                  <li>
+                    <label>Titel:</label>
+                    <span style="display: flex;">${$(this).closest('tr').find('.ill_title').text()}</span>
+                  </li>
+                  <li style="margin-top: 3rem;">
+                    <label for="response_id">Välj åtgärd:</label>
+                    <select id="response_id">
+                        <option value="1">Utlånad</option>
+                        <option value="2">Förkommen</option>
+                        <option value="3">Utlånas ej</option>
+                        <option value="4">Finns ej</option>
+                        <option value="5">F n ej tillgänglig</option>
+                        <option value="6">Ej anländ</option>
+                        <option value="7">Reserverad för er</option>
+                        <option value="8">Övrigt</option>
+                        <option value="9" selected>Levererad</option>
+                    </select>
+                  </li>
+                  <li>
+                    <label for="response_text">Meddelande:</label>
+                    <textarea id="response_text" name="response_text" rows="1" cols="50"></textarea>
+                  </li>                  
+                </ol>    
+            </fieldset>
+                            
+            <div style="padding-top: 15px; margin-left: 13rem;">
                 <label class="radio-inline">
                     <input id="kr2" class="may_reserve_option" type="radio" name="may_reserve" value="1">
                     Kan reserveras
@@ -222,7 +221,7 @@
                     <input id="kr1" class="may_reserve_option" type="radio" name="may_reserve" value="0">
                     Kan inte reserveras
                 </label>
-            </div>
+            </div>            
 
             `);
 
@@ -230,7 +229,7 @@
 
             $('.may_reserve_option').on('click', function() {
                 may_reserve = $(this).val();
-                console.log(may_reserve);
+                //console.log(may_reserve);
             });
 
             
@@ -244,13 +243,12 @@
                 if (may_reserve) {
                     url += `&may_reserve=${may_reserve}`;
                 }
-                console.log(encodeURI(url));
+                //console.log(encodeURI(url));
                 window.location = encodeURI(url);
 
             });
             
         });
-
 
         
         $('.adresslapplink').each(function () {
