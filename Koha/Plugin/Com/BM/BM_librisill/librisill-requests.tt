@@ -88,6 +88,7 @@
 
     new DataTable('#ill_resuests_table', {
       ordering: true,
+      columnDefs: [{ orderable: false, targets: 4 }],
       order: [
         [0, 'desc'],
       ],
