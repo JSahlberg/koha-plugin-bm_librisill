@@ -113,6 +113,7 @@
 
         new DataTable('#returnill_table', {
             ordering: true,
+            columnDefs: [{ orderable: false, targets: [8,9] }],
             order: [
                 [3, 'desc'],
             ],
