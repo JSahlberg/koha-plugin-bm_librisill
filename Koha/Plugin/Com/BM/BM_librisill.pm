@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.5.6";
+our $VERSION = "0.5.7";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -56,7 +56,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2025-11-19",
+    date_updated    => "2025-11-20",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -1356,8 +1356,11 @@ sub librisill_incomings {
     } else {
 
         warn "Archive? : " . $archive;
+        warn "Action: " . $action;
 
         if ($action) {
+
+            
 
             $extra_content = "&may_reserve=$may_reserve&response_id=$response_id&added_response=$added_response";
         
@@ -1373,9 +1376,11 @@ sub librisill_incomings {
 
         # Fetch the actual data from the query
         if ( $action ) {
+
+            warn "Action update: " . $action;
             
             $update_data = _update_libris( $sigil, $libris_key, $order_id, $action, $extra_content);
-            $fragment = "illrequests/$sigil/incoming";
+            $fragment = "illrequests/$sigil/incoming_archive?start_date=$start&end_date=$end";
             $orig_data = _get_data_from_libris( $sigil, $libris_key, $fragment);
 
         } else {
