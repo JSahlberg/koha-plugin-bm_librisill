@@ -70,15 +70,14 @@
                                         <td class="ill_status">
                                         [% FOREACH il IN ill_requests %]
                                             [% IF ( il.lf_number == ill.ill_id ) %]
-                                                <b>[% il.status | html %]</b> <!--(<span class="active_library">[% il.active_library %]</span>)-->
+                                                <b>[% il.status | html %]</b>
                                                 [% FOREACH rec IN il.recipients %]
                                                     [% IF ( rec.is_active_library ) %]
-                                                        [% rec.response_date | html %]
+                                                        <br>[% rec.response_date | html %]
                                                     [% END %]
                                                 [% END %]
                                             [% END %]
                                         [% END %]</td>
-                                        <!-- <td style="text-align: center;"><a class="btn btn-default btn-xs" href="/cgi-bin/koha/cataloguing/additem.pl?op=edititem&biblionumber=[% ill.biblionumber | html %]&itemnumber=[% ill.itemnumber | html %]#edititem" target="_blank">Lägg in</a></td> -->
                                         <td style="text-align: center;"><button class="behandla btn btn-xs btn-primary" data-bs-toggle="modal" data-bs-target="#behandlaModal" ill_id="[% ill.ill_id | html %]" itemnumber="[% ill.itemnumber | html %]" barcode="[% ill.barcode | html %]" itemnotes="[% ill.itemnotes | html %]">Behandla</button></td>
                                         <td style="text-align: center;"><button class="delete_ill btn btn-xs btn-danger" biblionumber="[% ill.biblionumber | html %]" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Ta bort</button></td>
                                     </tr>                    
@@ -165,10 +164,11 @@
     [% INCLUDE "$plugin_dir/librisill_js.inc" %]
     <script>
 
-        
+        console.log('[% CLASS %]');
 
         new DataTable('#ill_search_table', {
             ordering: true,
+            columnDefs: [{ orderable: false, targets: [7,8] }],
             order: [
                 [3, 'desc'],                
             ],
