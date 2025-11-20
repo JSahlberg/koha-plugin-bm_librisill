@@ -25,15 +25,11 @@
                 <main>
                     <div class="row">
                         <div class="col-md-10 order-md-2 order-sm-1">
-                        
-                            [% IF archive %]
-                            <h1>Fjärrlån ut - Arkiverade förfrågningar</h3>
-                            [% ELSE %]
-                            <h1>Fjärrlån ut - Fjärrlåneförfrågningar</h3>
-                            [% END %]
-                            
+                                                    
                             [% IF NOT errormessage %]
                             
+                            <h1>Fjärrlån ut - Aktuella förfrågningar</h3>
+
                             <div class="page-section">
                                 
                                 [% IF NOT decoded.count < 1 %]
@@ -49,13 +45,12 @@
                                             <th>Titel</th>
                                             <th>Bibliotek</th>
                                             <th>Status</th>
-                                            <th>Plocklapp</th>
-                                            <th>Adresslapp</th>
-                                            [% IF NOT archive %] <th>Behandla</th> [% END %]
+                                            <th>Åtgärder</th>                                            
                                         </tr>
                                     </thead>
                                     <tbody>
                                         [% FOREACH ill_request IN decoded.ill_requests.reverse %]            
+                                        [% IF (ill_request.status == 'Uteliggande') || (ill_request.status == 'Läst') %]
                                         <tr>
                                             <td class="lf_number"><a href="https://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill_request.lf_number %]" target="_blank">[% ill_request.lf_number %]</a></td>
                                             <td class="request_id"><a href="https://iller.libris.kb.se/librisfjarrlan/lf.php?action=incoming&id=[% ill_request.request_id %]" target="_blank">[% ill_request.request_id %]</a></td>
@@ -70,18 +65,81 @@
                                             
                                             </td>                                        
                                             <td class="ill_status">[% ill_request.status %]</td>
-                                            <!-- <td style="text-align: center;"><button class="btn btn-xs btn-primary plocklapp" librarycode="[% decoded.library_code %]" lfnumber="[% ill_request.lf_number %]">Öppna PDF</button></td> <!-- onclick="window.open('https://iller.libris.kb.se/librisfjarrlan/api/illrequests/[% decoded.library_code %]/[% ill_request.lf_number %]?format=pdf')-->
-                                            <td style="text-align: center;"><a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=flstatus&ill_id=[% ill_request.lf_number %]" target="_blank">Öppna PDF</a></td>
-                                            <td style="text-align: center;"><button class="adresslapplink btn btn-xs btn-primary" data="[% ill_request.requesting_library %]">Skriv ut</button></td>
-                                            [% IF NOT archive %] <td style="text-align: center;"><button class="behandla btn btn-xs btn-success" data-bs-toggle="modal" data-bs-target="#behandlaModal" data="[% ill_request.request_id	%]" timestamp="[% ill_request.last_modified %]">Öppna</a></td> [% END %]
+                                            
+                                            <td>
+                                                <div style="display: inline-flex;">
+                                                    <a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=flstatus&ill_id=[% ill_request.lf_number %]" target="_blank">Plocklapp</a>
+                                                    <button style="margin: 0 10px;" class="adresslapplink btn btn-xs btn-primary" data="[% ill_request.requesting_library %]">Adresslapp</button>
+                                                    <button class="behandla btn btn-xs btn-success" data-bs-toggle="modal" data-bs-target="#behandlaModal" data="[% ill_request.request_id	%]" timestamp="[% ill_request.last_modified %]">Behandla</a>
+                                                </div>
+                                            </td>                                        
                                         </tr>
+                                        [% END %]
                                         [% END %]
                                     </tbody>
                                 </table>
 
                                 [% ELSE %]
 
-                                <p><span>Det finns inga förfrågningar. </span></p>
+                                <p><span>Det finns inga aktuella förfrågningar. </span></p>
+
+                                [% END %]
+
+                            </div>
+                            <br>
+                            <h1>Fjärrlån ut - Arkiverade förfrågningar</h3>
+
+                            <div class="page-section">
+                                
+                                [% IF NOT decoded.count < 1 %]
+
+                                <!--<p><span>Antal förfrågningar: [% decoded.count | html %]</span></p>-->
+
+                                <table id="ill_incomings_archived_table" class="dataTable ill_table">
+                                    <thead>
+                                        <tr>
+                                            <th>Beställning</th>
+                                            <th>Löpnummer</th>
+                                            <th>Librisnummer</th>
+                                            <th>Titel</th>
+                                            <th>Bibliotek</th>
+                                            <th>Status</th>
+                                            <th>Åtgärder</th>                                            
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        [% FOREACH ill_request IN decoded.ill_requests.reverse %]
+                                        [% IF NOT ((ill_request.status == 'Uteliggande') || (ill_request.status == 'Läst')) %]
+                                        <tr>
+                                            <td class="lf_number"><a href="https://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill_request.lf_number %]" target="_blank">[% ill_request.lf_number %]</a></td>
+                                            <td class="request_id"><a href="https://iller.libris.kb.se/librisfjarrlan/lf.php?action=incoming&id=[% ill_request.request_id %]" target="_blank">[% ill_request.request_id %]</a></td>
+                                            <td class="bib_id"><a href="https://libris.kb.se/bib/[% ill_request.bib_id %]" target="_blank">[% ill_request.bib_id %]</a></td>
+                                            <td class="ill_title"><a href="/cgi-bin/koha/catalogue/search.pl?q=[% ill_request.bib_id %]" target="_blank">[% ill_request.title %]</a></td>
+                                            <td class="req_library">
+                                            [% FOREACH lib IN ill_libraries %]
+                                                [% IF ill_request.requesting_library == lib.sigel %]
+                                                    <a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% IF lib.length > 1 %][% lib.sigel %][% ELSE %][% lib.searchstr %][% END %]">[% lib.sigel %] - [% lib.libraryname %]</a>
+                                                [% END %]
+                                            [% END %]
+                                            
+                                            </td>                                        
+                                            <td class="ill_status">[% ill_request.status %]</td>
+                                            
+                                            <td>
+                                                <div style="display: inline-flex;">
+                                                    <a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=flstatus&ill_id=[% ill_request.lf_number %]" target="_blank">Plocklapp</a>
+                                                    <button style="margin: 0 10px;" class="adresslapplink btn btn-xs btn-primary" data="[% ill_request.requesting_library %]">Adresslapp</button>                                                
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        [% END %]
+                                        [% END %]
+                                    </tbody>
+                                </table>
+
+                                [% ELSE %]
+
+                                <p><span>Det finns inga arkiverade förfrågningar. </span></p>
 
                                 [% END %]
 
@@ -130,11 +188,12 @@
 
         new DataTable('#ill_incomings_table', {
             ordering: true,
+            columnDefs: [{ orderable: false, targets: 6 }],
             order: [
                 [1, 'desc'],
             ],
             bAutoWidth: false,
-            pageLength: 25,
+            pageLength: 10,
             language: {
                 "search" : "Sök:",
                 "lengthMenu" : "_MENU_ poster per sida",
@@ -145,7 +204,27 @@
                 "topEnd" : "pageLength",                
             }
         }); 
+
         
+        new DataTable('#ill_incomings_archived_table', {
+            ordering: true,
+            columnDefs: [{ orderable: false, targets: 6 }],
+            order: [
+                [1, 'desc'],
+            ],
+            bAutoWidth: false,
+            pageLength: 10,
+            language: {
+                "search" : "Sök:",
+                "lengthMenu" : "_MENU_ poster per sida",
+                "info" : "Visar _START_ till _END_ av _TOTAL_ poster",
+            },
+            layout: {
+                "topStart" : "search",
+                "topEnd" : "pageLength",                
+            }
+        }); 
+
 
         $('.plocklapp').on('click', function(event) {
 
@@ -244,7 +323,7 @@
                     url += `&may_reserve=${may_reserve}`;
                 }
                 //console.log(encodeURI(url));
-                window.location = encodeURI(url);
+                window.location = url;
 
             });
             
