@@ -69,7 +69,7 @@
                                             <td>
                                                 <div style="display: inline-flex;">
                                                     <a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=flstatus&ill_id=[% ill_request.lf_number %]" target="_blank">Plocklapp</a>
-                                                    <button style="margin: 0 10px;" class="adresslapplink btn btn-xs btn-primary" data="[% ill_request.requesting_library %]">Adresslapp</button>
+                                                    <a style="margin: 0 10px;" href="" class="adresslapplink btn btn-xs btn-primary" homebranch="[% ill_request.active_library %]" sigel="[% ill_request.requesting_library %]">Adresslapp</a>
                                                     <button class="behandla btn btn-xs btn-success" data-bs-toggle="modal" data-bs-target="#behandlaModal" data="[% ill_request.request_id	%]" timestamp="[% ill_request.last_modified %]">Behandla</a>
                                                 </div>
                                             </td>                                        
@@ -128,7 +128,7 @@
                                             <td>
                                                 <div style="display: inline-flex;">
                                                     <a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=flstatus&ill_id=[% ill_request.lf_number %]" target="_blank">Plocklapp</a>
-                                                    <button style="margin: 0 10px;" class="adresslapplink btn btn-xs btn-primary" data="[% ill_request.requesting_library %]">Adresslapp</button>                                                
+                                                    <a style="margin: 0 10px;" href="" class="adresslapplink btn btn-xs btn-primary" homebranch="[% ill_request.active_library %]" sigel="[% ill_request.requesting_library %]">Adresslapp</a>
                                                 </div>
                                             </td>
                                         </tr>
@@ -331,29 +331,36 @@
 
         
         $('.adresslapplink').each(function () {
-            var sigel = $(this).attr('data');
+            var sigel = $(this).attr('sigel');
+            var homebranch = $(this).attr('homebranch');
             $(this).on('click', function (event) {
                 event.preventDefault();
-                printDiv(sigel);
+                printDiv(sigel, homebranch);
             });
         });
     
 
 
-        function printDiv(sigel) {
-
+        function printDiv(sigel, homebranch) {
+            
             $.ajax({
                 type: "GET",
                 cache: true,
                 url: `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=getlibdata&sigel=${sigel}`,
-                success: function (bibinfo) {
-                    //console.log(bibinfo);
-                    const branchinfo = bibinfo.libraries[1];
-                    const sigelinfo = bibinfo.libraries[0];
-                    //console.log(branchinfo);
-                    //console.log(sigelinfo);
-
-                    let printWindow = window.open('', '', 'height=500, width=700');
+                success: function (bibinfo) {                    
+                    var sigel0 = bibinfo.libraries[0];
+                    var sigel1 = bibinfo.libraries[1];
+                    var branchinfo;
+                    var sigelinfo;
+                    if (sigel0.library_code == homebranch) {
+                        branchinfo = sigel0;
+                        sigelinfo = sigel1;
+                    } else {
+                        branchinfo = sigel1;
+                        sigelinfo = sigel0;
+                    }
+                                        
+                    let printWindow = window.open('', '', 'height=700, width=900');
                     printWindow.document.open();
                     printWindow.document.write(`
                         <html>
