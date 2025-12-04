@@ -115,7 +115,7 @@
             ordering: true,
             columnDefs: [{ orderable: false, targets: [8,9] }],
             order: [
-                [3, 'desc'],
+                [4, 'desc'],
             ],
             bAutoWidth: false,
             pageLength: 25,
