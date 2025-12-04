@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.5.8";
+our $VERSION = "0.5.9";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -56,7 +56,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2025-11-28",
+    date_updated    => "2025-12-04",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -241,6 +241,8 @@ sub flstatus {
         warn "EJ ILL_id"
     }     
     
+    # warn "URL: " . $url;
+
     # Fetch the actual data from the query
     my $request = HTTP::Request->new("GET" => $url);
 
@@ -248,12 +250,14 @@ sub flstatus {
 
     if ($pdf == 1) {
         
-        $request->header( 'content-type' => 'application/pdf' );
+        #$request->header( 'content-type' => 'application/pdf' );
 
         my $response = $ua->request($request);
 
         #warn "Response: " . $response->content;
-        print "Content-Type: application/pdf\n";
+
+        #warn "Response: " . $response->content;
+        print "Content-Type: application/pdf\n\n";
         print $response->content;
 
     } else {
