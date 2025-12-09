@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.5.9";
+our $VERSION = "0.6.0";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
