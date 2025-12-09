@@ -36,7 +36,7 @@
                       <th>Fjärrlånenummer</th>                      
                       <th>Titel</th>
                       <th>Låntagare</th>
-                      <th>Kortnummer</th>
+                      <th>Kortnummer/ID</th>
                       <th>Importera</th>                      
                     </tr>
                   </thead>
