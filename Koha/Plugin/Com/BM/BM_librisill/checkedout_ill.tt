@@ -72,7 +72,7 @@
                                         <td class="ill_status">
                                         [% FOREACH il IN ill_requests %]
                                             [% IF ( il.lf_number == ill.ill_id ) %]
-                                                <b>[% il.status | html %]</b> <!--(<span class="active_library">[% il.active_library %]</span>)-->
+                                                <b>[% il.local_status | html %]</b> <!--(<span class="active_library">[% il.active_library %]</span>)-->
                                                 [% FOREACH rec IN il.recipients %]
                                                     [% IF ( rec.is_active_library ) %]
                                                         [% rec.response_date | html %]
