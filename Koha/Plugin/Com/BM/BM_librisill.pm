@@ -56,7 +56,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2025-12-04",
+    date_updated    => "2025-11-28",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -635,8 +635,9 @@ FROM
     
 WHERE 
     items.itype = '$itemtype'
-    AND items.notforloan = '0'
-    AND items.onloan IS NOT NULL
+    AND items.notforloan = '0' 
+    AND items.onloan IS NOT NULL 
+    AND items.issues > 0 
     AND items.homebranch = '$branch'
     
 ORDER BY items.dateaccessioned DESC
@@ -1161,6 +1162,10 @@ sub librisill_requests {
 
             my $patron = Koha::Patrons->find( { cardnumber => $user_id } );
 
+            if (!$patron) {
+                $patron = Koha::Patrons->find( { borrowernumber => $user_id } );
+            }
+
             my $patron_id = length($patron);
 
             my $patron_name = length($patron);
@@ -1168,7 +1173,7 @@ sub librisill_requests {
             if ($patron) {
                 $patron_id = $patron->borrowernumber;
                 $patron_name = $patron->surname . ", " . $patron->firstname;
-                # warn "Patronname: " . $patron_name;
+                # warn "Patronname: " . $patron_name;            
             } else {
                 $patron_id = "";
                 $patron_name = "";            
@@ -1249,6 +1254,10 @@ sub librisill_request {
     my $user_id = $decoded->{ill_requests}->[0]->{user_id};
 
     my $patron = Koha::Patrons->find( { cardnumber => $user_id } );
+
+    if (!$patron) {
+        $patron = Koha::Patrons->find( { borrowernumber => $user_id } );
+    }
 
     my $patron_id = length($patron);
 
