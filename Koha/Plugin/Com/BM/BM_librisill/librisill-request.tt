@@ -67,7 +67,7 @@
                     <span>[% IF patron.surname.length > 0 %][% patron.surname %], [% patron.firstname %][% END %] [% IF patron.borrowernumber.length > 0 %]([% patron.borrowernumber %])[% ELSIF decoded.ill_requests.0.user_id > 0 %]<i style="color:#d00">(Ej registrerad låntagare)</i> [% END %]</span>
                   </li>
                   <li>
-                    <label>Lånekortsnummer:</label>
+                    <label>Lånekortsnummer/ID:</label>
                     <span>[% decoded.ill_requests.0.user_id %]</span>
                   </li>
                   <li>
