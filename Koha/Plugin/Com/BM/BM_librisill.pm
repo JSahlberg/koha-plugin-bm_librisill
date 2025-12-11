@@ -78,35 +78,34 @@ sub new {
 
 
 sub intranet_js {
-    my ( $self ) = @_;    
+    my ( $self ) = @_;
 
-    return q|
-        <script>           
+    return <<'EOF';
+<script>           
 
-            var receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=receive_ILL';
+    var receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=receive_ILL';
 
-            $(`
-                <li class="nav-item">
-                    <a class="nav-link" href="${receive_ILL_link}">
-                        <span class="nav-link-text">Fjärrlån</span>
-                    </a>
-                </li>
-            `).appendTo('#toplevelmenu');
+    $(`
+        <li class="nav-item">
+            <a class="nav-link" href="${receive_ILL_link}">
+                <span class="nav-link-text">Fjärrlån</span>
+            </a>
+        </li>
+    `).appendTo('#toplevelmenu');
 
-            if ($('#main_intranet-main').length) {
-                $('.biglinks-list:first').append(`
-                    <li>
-                    <a class="icon_general icon_fjarrlan" href="${receive_ILL_link}">
-                        <i class="fa fa-fw fa fa-envelope"></i>
-                    Fjärrlån
-                    </a>
-                </li>
-                `);
-            }            
+    if ($('#main_intranet-main').length) {
+        $('.biglinks-list:first').append(`
+            <li>
+            <a class="icon_general icon_fjarrlan" href="${receive_ILL_link}">
+                <i class="fa fa-fw fa fa-envelope"></i>
+            Fjärrlån
+            </a>
+        </li>
+        `);
+    }            
 
-        </script>
-    |;
-    
+</script>
+EOF
 }
 
 
@@ -169,6 +168,55 @@ sub install() {
 
         $self->store_data({'token' => random_bytes_base64(16, '')});
     }
+
+}
+
+
+
+sub tool {
+    my ( $self, $args ) = @_;
+
+    my $query = new CGI;
+
+    my $sub = $query->param('subroutine');
+
+    if ($sub eq 'flstatus') {
+        my $result = flstatus($self, $query);    
+    }
+    if ($sub eq 'receive_ILL') {
+        my $result = receive_ILL($self, $query);    
+    }
+    if ($sub eq 'save_ILL') {
+        my $result = save_ILL($self, $query);    
+    }
+    if ($sub eq 'delete_ILL') {
+        my $result = delete_ILL($self, $query);    
+    }
+    if ($sub eq 'checkedout_ILL') {
+        my $result = checkedout_ILL($self, $query);    
+    }
+    if ($sub eq 'return_ILL') {
+        my $result = return_ILL($self, $query);    
+    }
+    if ($sub eq 'deleted_ILL') {
+        my $result = deleted_ILL($self, $query);    
+    }
+    if ($sub eq 'librisill_requests') {
+        my $result = librisill_requests($self, $query);    
+    }
+    if ($sub eq 'librisill_request') {
+        my $result = librisill_request($self, $query);    
+    }
+    if ($sub eq 'librisill_incomings') {
+        my $result = librisill_incomings($self, $query);    
+    }
+    if ($sub eq 'getlibdata') {
+        my $result = getlibdata($self, $query);    
+    }
+    if ($sub eq 'import_ill') {
+        my $result = import_ill($self, $query);    
+    }
+
 }
 
 
@@ -193,6 +241,7 @@ sub getLibrisKey {
 
 
 sub flstatus {
+    #my ( $self, $query ) = @_;
     my ( $self, $ill_id, $pdf, $start, $end ) = @_;
 
     my $query = new CGI;
@@ -283,7 +332,8 @@ sub receive_ILL {
             template_name   => $self->mbf_path("receive_ill.tt"),
             query           => $query,
             type            => "intranet",
-            flagsrequired   => { circulate => "circulate_remaining_permissions" },
+            authnotrequired => 1,
+            flagsrequired   => {}
         }
     );    
 
@@ -420,7 +470,7 @@ ORDER BY items.dateaccessioned DESC
 
             my $pdf = 0;
 
-            $statuses = flstatus( $self, $ill_id, $pdf, $start, $end );
+            $statuses = flstatus( $self, $query );
 
             warn "Statuses: " . $statuses;
 
@@ -723,7 +773,7 @@ ORDER BY items.dateaccessioned DESC
 
             my $pdf = 0;
 
-            my $statuses = flstatus( $self, $ill_id, $pdf, $start, $end );
+            my $statuses = flstatus( $self, $query );
 
             my $status_decoded = decode_json( $statuses );
 
@@ -936,7 +986,7 @@ ORDER BY items.dateaccessioned DESC
 
             my $pdf = 0;
 
-            my $statuses = flstatus( $self, $ill_id, $pdf, $start, $end );
+            my $statuses = flstatus( $self, $query );
 
             my $status_decoded = decode_json( $statuses );
 
