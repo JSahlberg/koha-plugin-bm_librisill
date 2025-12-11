@@ -53,7 +53,7 @@
                       [% END %]
                       </td>
                       <td style="white-space:nowrap">[% IF ill_request.user_id.length > 0 %]<a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% ill_request.user_id %]" target="_blank">[% ill_request.user_id %]</a>[% ELSE %] (ej angivet) [% END  %]</td>
-                      <td style="text-align: center;"><a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=librisill_request&lfnumber=[% ill_request.lf_number %]">Behandla</a></td>
+                      <td style="text-align: center;"><a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=librisill_request&lfnumber=[% ill_request.lf_number %]">Behandla</a></td>
                       <!-- <td><a href="#" class="import" data="[% ill_request.bib_id %]">Importera</a></td> -->
                     </tr>
                     [% END %]
