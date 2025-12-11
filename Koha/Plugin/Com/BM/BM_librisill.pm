@@ -83,7 +83,7 @@ sub intranet_js {
     return <<'EOF';
 <script>           
 
-    var receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=receive_ILL';
+    var receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=tool&subroutine=receive_ILL';
 
     $(`
         <li class="nav-item">
