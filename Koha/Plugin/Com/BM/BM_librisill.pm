@@ -470,7 +470,7 @@ ORDER BY items.dateaccessioned DESC
 
             my $pdf = 0;
 
-            $statuses = flstatus( $self, $query );
+            $statuses = flstatus( $self, $ill_id, $pdf, $start, $end );
 
             warn "Statuses: " . $statuses;
 
@@ -773,7 +773,7 @@ ORDER BY items.dateaccessioned DESC
 
             my $pdf = 0;
 
-            my $statuses = flstatus( $self, $query );
+            my $statuses = flstatus( $self, $ill_id, $pdf, $start, $end );
 
             my $status_decoded = decode_json( $statuses );
 
@@ -986,7 +986,7 @@ ORDER BY items.dateaccessioned DESC
 
             my $pdf = 0;
 
-            my $statuses = flstatus( $self, $query );
+            my $statuses = flstatus( $self, $ill_id, $pdf, $start, $end );
 
             my $status_decoded = decode_json( $statuses );
 
@@ -1804,5 +1804,4 @@ sub _append_to_field {
 }
 
 1;
-
 
