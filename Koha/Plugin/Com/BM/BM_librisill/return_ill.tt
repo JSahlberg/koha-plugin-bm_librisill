@@ -44,7 +44,7 @@
                                         <th>Omlånad</th>
                                         <th>Låntagare</th>
                                         <th>Utlånande bibliotek</th>
-                                        <th>Adresslapp</th>
+                                        <th>Åtgärder</th>
                                         <th>Ta bort</th>
                                     </tr>
                                 </thead>
@@ -66,7 +66,7 @@
                                                         <td class="ill_active_library">
                                                             <a href="https://biblioteksdatabasen.libris.kb.se/library/[% lib.library_id %]/" target="_blank">[% lib.sigel %] - [% lib.libraryname %]</a>
                                                         </td>
-                                                        <td style="text-align: center;"><button class="adresslapplink btn btn-xs btn-primary" homebranch="[% ill_request.requesting_library %]" sigel="[% lib.sigel %]">Skriv ut</button></td>
+                                                        <td style="text-align: center;"><button class="adresslapplink btn btn-xs btn-primary" homebranch="[% ill_request.requesting_library %]" sigel="[% lib.sigel %]">Adresslapp</button></td>
                                                     [% END %]
                                                 [% END %]
                                             [% END %]                                                
