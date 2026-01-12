@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.7.1";
+our $VERSION = "0.7.2";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -56,7 +56,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2025-12-17",
+    date_updated    => "2026-01-12",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -1763,6 +1763,40 @@ sub import_ill {
 }
 
 
+sub get_record_from_request {
+
+    my ( $req ) = @_; 
+
+    # Create a new record
+    my $record = MARC::Record->new();
+    $record->encoding( 'UTF-8' );
+
+    my $f001 = MARC::Field->new( '001', $req->{ 'bib_id' } );
+    $record->insert_fields_ordered( $f001 );
+
+    if ( $req->{ 'author' } && $req->{ 'author' } ne '' ) {
+        my $author = MARC::Field->new(
+            '100',' ',' ',
+            a => $req->{ 'author' },
+        );  
+        $record->insert_fields_ordered( $author );
+    }
+
+    my $title = MARC::Field->new(
+        '245',' ',' ',
+        a => $req->{ 'title' },
+    );
+    $record->insert_fields_ordered( $title );
+
+    # FIXME Add more fields, especially for articles
+
+    # say $record->as_xml();
+
+    return $record;
+
+}
+
+
 sub get_record_from_libris {
 
     my ( $libris_id ) = @_; 
@@ -1804,5 +1838,6 @@ sub _append_to_field {
 }
 
 1;
+
 
 
