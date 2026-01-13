@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.7.2";
+our $VERSION = "0.7.0";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -56,7 +56,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2026-01-12",
+    date_updated    => "2025-12-11",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -222,7 +222,6 @@ sub tool {
 
 
 sub getLibrisKey {
-    
     my ( $self ) = @_;
 
     my $branch;
@@ -241,14 +240,21 @@ sub getLibrisKey {
 
 
 sub flstatus {
-    #my ( $self, $query ) = @_;
     my ( $self, $ill_id, $pdf, $start, $end ) = @_;
 
     my $query = new CGI;
 
+    if ($query->param('pdf')) {
+        $pdf = $query->param('pdf');
+    } else {
+        $pdf = 0;
+    }
+
+    warn "PDF? : " . $pdf;
+
     if ($query->param('ill_id')) {
         $ill_id = $query->param('ill_id');
-        $pdf = 1;
+        #$pdf = 1;
     }
     
     my $branch;
@@ -282,12 +288,14 @@ sub flstatus {
     my $url;    
     
     if ($pdf == 1) {
+        warn "Flstatus: PDF!";
         $url = "$protocol://$host/$string/$branch_fixed/$ill_id?format=pdf";
     } elsif (length($ill_id) > 1) {
         $url = "$protocol://$host/$string/$branch_fixed/$ill_id";
+        warn "Flstatus: ILL_ID";
     } else {
         $url = "$protocol://$host/$string/$branch_fixed/outgoing?start_date=$start&end_date=$end";
-        warn "EJ ILL_id"
+        warn "Flstatus: EJ ILL_id";
     }     
     
     # warn "URL: " . $url;
@@ -1359,7 +1367,6 @@ sub librisill_request {
 }
 
 
-
 sub librisill_incomings {
     my ( $self, @args ) = @_;
 
@@ -1616,7 +1623,6 @@ sub _update_libris {
 
 
 sub getlibdata {
-
     my ( $self, $sigel ) = @_;
 
     my $branch;
@@ -1686,7 +1692,20 @@ sub import_ill {
     my $ill_location = $self->retrieve_data('loc');
     my $ill_notforloan = $self->retrieve_data('notforloan');
 
-    my $record = get_record_from_libris( $bib_id );
+    my $record;
+    if ( $bib_id =~ m/^BIB/i ) { 
+        # There is no Libris record identifier, bib_id = "BIB" + request_id. Create a mininal record
+        warn "Ill_id: " . $ill_id;
+        my $request = flstatus( $self, $ill_id );
+        warn "Request: " . $request;
+        my $req_decoded = decode_json( $request );
+        my $libris_req = $req_decoded->{'ill_requests'}->[0];
+        warn "libris_req: " . $libris_req; 
+        $record = get_record_from_request( $libris_req );
+    
+    } else {
+        $record = get_record_from_libris( $bib_id );
+    }
 
     $record = _append_to_field( $record, '245', 'a', 'FJÄRRLÅN' );
 
@@ -1798,7 +1817,6 @@ sub get_record_from_request {
 
 
 sub get_record_from_libris {
-
     my ( $libris_id ) = @_; 
 
     my $xml = get("http://api.libris.kb.se/sru/libris?version=1.1&operation=searchRetrieve&query=rec.recordIdentifier=$libris_id");
@@ -1824,7 +1842,6 @@ sub get_record_from_libris {
 
 
 sub _append_to_field {
-
     my ( $record, $field, $subfield, $string ) = @_;
 
     my $this_field = $record->field( $field );
@@ -1838,6 +1855,3 @@ sub _append_to_field {
 }
 
 1;
-
-
-
