@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.7.3;
+our $VERSION = "0.7.3";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -1855,3 +1855,4 @@ sub _append_to_field {
 }
 
 1;
+
