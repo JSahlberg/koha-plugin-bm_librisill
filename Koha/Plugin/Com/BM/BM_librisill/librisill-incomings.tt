@@ -409,6 +409,9 @@
                                             <td>${sigelinfo.name}</td>
                                         </tr>
                                         <tr>
+                                            <td>${sigelinfo.department}</td>
+                                        </tr>
+                                        <tr>
                                             <td>${sigelinfo.address1}</td>
                                         </tr>
                                         <tr>
