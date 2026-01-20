@@ -4,25 +4,25 @@
     <h5>Fjärrlån in</h5>
     <ul>
         <li>
-            <a href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=librisill_requests">Importera fjärrlån</a>
+            <a href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=librisill_requests">Importera fjärrlån</a>
         </li>
         <li>
-            <a href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=receive_ILL">Ankomstregistrera</a>
+            <a href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=receive_ILL">Ankomstregistrera</a>
         </li>
         <li>
-            <a href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=checkedout_ILL">Utlånade fjärrlån</a>
+            <a href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=checkedout_ILL">Utlånade fjärrlån</a>
         </li>
         <li>
-            <a href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=return_ILL">Återlämnade fjärrlån</a>
+            <a href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=return_ILL">Återlämnade fjärrlån</a>
         </li>                
         <li>
-            <a href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=deleted_ILL">Borttagna fjärrlån</a>
+            <a href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=deleted_ILL">Borttagna fjärrlån</a>
         </li>
     </ul>
     <h5>Fjärrlån ut</h5>
     <ul>
         <li>
-            <a href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=librisill_incomings&archive=true">Fjärrlåneförfrågningar</a>
+            <a href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=librisill_incomings&archive=true">Fjärrlåneförfrågningar</a>
         </li>                
     </ul>
 </div>

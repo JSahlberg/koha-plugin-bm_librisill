@@ -211,7 +211,7 @@
             var active_library = $('#behandlaModal').find('.active_library').val();
             var barcode = $('#behandlaModal').find('.ill_barcode').val();
             
-            var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=save_ILL&itemnumber=${itemnumber}&itemnotes=${itemnotes}&ill_id=${ill_id}&barcode=${barcode}&active_library=${active_library}`;
+            var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=save_ILL&itemnumber=${itemnumber}&itemnotes=${itemnotes}&ill_id=${ill_id}&barcode=${barcode}&active_library=${active_library}`;
     
             //console.log(encodeURI(url));
 
@@ -259,7 +259,7 @@
                 var itemnumber = $(this).attr('itemnumber');
                 var borrowernumber = $(this).attr('borrowernumber');
 
-                var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=delete_ILL&biblionumber=${biblionumber}&itemnumber=${itemnumber}&borrowernumber=${borrowernumber}`;
+                var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=delete_ILL&biblionumber=${biblionumber}&itemnumber=${itemnumber}&borrowernumber=${borrowernumber}`;
 
                 $.ajax({
                     url: `${url}`,
@@ -268,7 +268,7 @@
                 }).done(function (data) {
                     if ( data.error == '0' ) {                        
                         console.log('Borttagen!');
-                        window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=receive_ILL';
+                        window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=receive_ILL';
                     } else {
                         alert('Fel: Gick inte att ta bort.');
                     }

@@ -121,7 +121,7 @@
           $(this).click(function (event) {
               event.preventDefault();
               
-              var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=import_ill&bib_id=[% decoded.ill_requests.0.bib_id %]&borrowernumber=[% patron.borrowernumber %]&ill_id=[% decoded.ill_requests.0.lf_number %]`;
+              var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=import_ill&bib_id=[% decoded.ill_requests.0.bib_id %]&borrowernumber=[% patron.borrowernumber %]&ill_id=[% decoded.ill_requests.0.lf_number %]`;
 
               $('#importSubmittedModal').modal('show');
 
@@ -137,13 +137,13 @@
                     $('#importSubmittedModal .modal-body').html('<p style="color: green;">Import genomförd!</p><p>Låntagare saknas, ingen reservation gjord.</p>');                  
                     const importmodal = document.getElementById('importSubmittedModal')
                     importmodal.addEventListener('hidden.bs.modal', event => {
-                      window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=receive_ILL';
+                      window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=receive_ILL';
                     });                  
                   } else {
                     $('#importSubmittedModal .modal-body').html('<p style="color: green;">Import och reservation genomförd!</p>');                  
                     const importmodal = document.getElementById('importSubmittedModal')
                     importmodal.addEventListener('hidden.bs.modal', event => {
-                      window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=receive_ILL';
+                      window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=receive_ILL';
                     });                  
                   }                  
                 }

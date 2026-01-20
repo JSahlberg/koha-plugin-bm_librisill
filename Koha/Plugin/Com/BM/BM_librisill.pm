@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.6.0";
+our $VERSION = "0.7.5";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -56,7 +56,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2025-11-28",
+    date_updated    => "2026-01-19",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -78,35 +78,34 @@ sub new {
 
 
 sub intranet_js {
-    my ( $self ) = @_;    
+    my ( $self ) = @_;
 
-    return q|
-        <script>           
+    return <<'EOF';
+<script>           
 
-            var receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=receive_ILL';
+    var receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=tool&subroutine=receive_ILL';
 
-            $(`
-                <li class="nav-item">
-                    <a class="nav-link" href="${receive_ILL_link}">
-                        <span class="nav-link-text">Fjärrlån</span>
-                    </a>
-                </li>
-            `).appendTo('#toplevelmenu');
+    $(`
+        <li class="nav-item">
+            <a class="nav-link" href="${receive_ILL_link}">
+                <span class="nav-link-text">Fjärrlån</span>
+            </a>
+        </li>
+    `).appendTo('#toplevelmenu');
 
-            if ($('#main_intranet-main').length) {
-                $('.biglinks-list:first').append(`
-                    <li>
-                    <a class="icon_general icon_fjarrlan" href="${receive_ILL_link}">
-                        <i class="fa fa-fw fa fa-envelope"></i>
-                    Fjärrlån
-                    </a>
-                </li>
-                `);
-            }            
+    if ($('#main_intranet-main').length) {
+        $('.biglinks-list:first').append(`
+            <li>
+            <a class="icon_general icon_fjarrlan" href="${receive_ILL_link}">
+                <i class="fa fa-fw fa fa-envelope"></i>
+            Fjärrlån
+            </a>
+        </li>
+        `);
+    }            
 
-        </script>
-    |;
-    
+</script>
+EOF
 }
 
 
@@ -169,12 +168,60 @@ sub install() {
 
         $self->store_data({'token' => random_bytes_base64(16, '')});
     }
+
+}
+
+
+
+sub tool {
+    my ( $self, $args ) = @_;
+
+    my $query = new CGI;
+
+    my $sub = $query->param('subroutine');
+
+    if ($sub eq 'flstatus') {
+        my $result = flstatus($self, $query);    
+    }
+    if ($sub eq 'receive_ILL') {
+        my $result = receive_ILL($self, $query);    
+    }
+    if ($sub eq 'save_ILL') {
+        my $result = save_ILL($self, $query);    
+    }
+    if ($sub eq 'delete_ILL') {
+        my $result = delete_ILL($self, $query);    
+    }
+    if ($sub eq 'checkedout_ILL') {
+        my $result = checkedout_ILL($self, $query);    
+    }
+    if ($sub eq 'return_ILL') {
+        my $result = return_ILL($self, $query);    
+    }
+    if ($sub eq 'deleted_ILL') {
+        my $result = deleted_ILL($self, $query);    
+    }
+    if ($sub eq 'librisill_requests') {
+        my $result = librisill_requests($self, $query);    
+    }
+    if ($sub eq 'librisill_request') {
+        my $result = librisill_request($self, $query);    
+    }
+    if ($sub eq 'librisill_incomings') {
+        my $result = librisill_incomings($self, $query);    
+    }
+    if ($sub eq 'getlibdata') {
+        my $result = getlibdata($self, $query);    
+    }
+    if ($sub eq 'import_ill') {
+        my $result = import_ill($self, $query);    
+    }
+
 }
 
 
 
 sub getLibrisKey {
-    
     my ( $self ) = @_;
 
     my $branch;
@@ -197,9 +244,17 @@ sub flstatus {
 
     my $query = new CGI;
 
+    if ($query->param('pdf')) {
+        $pdf = $query->param('pdf');
+    } else {
+        $pdf = 0;
+    }
+
+    warn "PDF? : " . $pdf;
+
     if ($query->param('ill_id')) {
         $ill_id = $query->param('ill_id');
-        $pdf = 1;
+        #$pdf = 1;
     }
     
     my $branch;
@@ -233,12 +288,14 @@ sub flstatus {
     my $url;    
     
     if ($pdf == 1) {
+        warn "Flstatus: PDF!";
         $url = "$protocol://$host/$string/$branch_fixed/$ill_id?format=pdf";
     } elsif (length($ill_id) > 1) {
         $url = "$protocol://$host/$string/$branch_fixed/$ill_id";
+        warn "Flstatus: ILL_ID";
     } else {
         $url = "$protocol://$host/$string/$branch_fixed/outgoing?start_date=$start&end_date=$end";
-        warn "EJ ILL_id"
+        warn "Flstatus: EJ ILL_id";
     }     
     
     # warn "URL: " . $url;
@@ -283,7 +340,8 @@ sub receive_ILL {
             template_name   => $self->mbf_path("receive_ill.tt"),
             query           => $query,
             type            => "intranet",
-            flagsrequired   => { circulate => "circulate_remaining_permissions" },
+            authnotrequired => 1,
+            flagsrequired   => {}
         }
     );    
 
@@ -1309,7 +1367,6 @@ sub librisill_request {
 }
 
 
-
 sub librisill_incomings {
     my ( $self, @args ) = @_;
 
@@ -1566,7 +1623,6 @@ sub _update_libris {
 
 
 sub getlibdata {
-
     my ( $self, $sigel ) = @_;
 
     my $branch;
@@ -1636,7 +1692,20 @@ sub import_ill {
     my $ill_location = $self->retrieve_data('loc');
     my $ill_notforloan = $self->retrieve_data('notforloan');
 
-    my $record = get_record_from_libris( $bib_id );
+    my $record;
+    if ( $bib_id =~ m/^BIB/i ) { 
+        # There is no Libris record identifier, bib_id = "BIB" + request_id. Create a mininal record
+        warn "Ill_id: " . $ill_id;
+        my $request = flstatus( $self, $ill_id );
+        warn "Request: " . $request;
+        my $req_decoded = decode_json( $request );
+        my $libris_req = $req_decoded->{'ill_requests'}->[0];
+        warn "libris_req: " . $libris_req; 
+        $record = get_record_from_request( $libris_req );
+    
+    } else {
+        $record = get_record_from_libris( $bib_id );
+    }
 
     $record = _append_to_field( $record, '245', 'a', 'FJÄRRLÅN' );
 
@@ -1713,8 +1782,41 @@ sub import_ill {
 }
 
 
-sub get_record_from_libris {
+sub get_record_from_request {
 
+    my ( $req ) = @_; 
+
+    # Create a new record
+    my $record = MARC::Record->new();
+    $record->encoding( 'UTF-8' );
+
+    my $f001 = MARC::Field->new( '001', $req->{ 'bib_id' } );
+    $record->insert_fields_ordered( $f001 );
+
+    if ( $req->{ 'author' } && $req->{ 'author' } ne '' ) {
+        my $author = MARC::Field->new(
+            '100',' ',' ',
+            a => $req->{ 'author' },
+        );  
+        $record->insert_fields_ordered( $author );
+    }
+
+    my $title = MARC::Field->new(
+        '245',' ',' ',
+        a => $req->{ 'title' },
+    );
+    $record->insert_fields_ordered( $title );
+
+    # FIXME Add more fields, especially for articles
+
+    # say $record->as_xml();
+
+    return $record;
+
+}
+
+
+sub get_record_from_libris {
     my ( $libris_id ) = @_; 
 
     my $xml = get("http://api.libris.kb.se/sru/libris?version=1.1&operation=searchRetrieve&query=rec.recordIdentifier=$libris_id");
@@ -1740,7 +1842,6 @@ sub get_record_from_libris {
 
 
 sub _append_to_field {
-
     my ( $record, $field, $subfield, $string ) = @_;
 
     my $this_field = $record->field( $field );
@@ -1754,4 +1855,6 @@ sub _append_to_field {
 }
 
 1;
+
+
 

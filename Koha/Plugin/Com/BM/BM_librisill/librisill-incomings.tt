@@ -68,7 +68,7 @@
                                             
                                             <td>
                                                 <div style="display: inline-flex;">
-                                                    <a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=flstatus&ill_id=[% ill_request.lf_number %]" target="_blank">Plocklapp</a>
+                                                    <a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=flstatus&ill_id=[% ill_request.lf_number %]&pdf=1" target="_blank">Plocklapp</a>
                                                     <a style="margin: 0 10px;" href="" class="adresslapplink btn btn-xs btn-primary" homebranch="[% ill_request.active_library %]" sigel="[% ill_request.requesting_library %]">Adresslapp</a>
                                                     <button class="behandla btn btn-xs btn-success" data-bs-toggle="modal" data-bs-target="#behandlaModal" data="[% ill_request.request_id	%]" timestamp="[% ill_request.last_modified %]">Behandla</a>
                                                 </div>
@@ -127,7 +127,7 @@
                                             
                                             <td>
                                                 <div style="display: inline-flex;">
-                                                    <a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=flstatus&ill_id=[% ill_request.lf_number %]" target="_blank">Plocklapp</a>
+                                                    <a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=flstatus&ill_id=[% ill_request.lf_number %]&pdf=1" target="_blank">Plocklapp</a>
                                                     <a style="margin: 0 10px;" href="" class="adresslapplink btn btn-xs btn-primary" homebranch="[% ill_request.active_library %]" sigel="[% ill_request.requesting_library %]">Adresslapp</a>
                                                 </div>
                                             </td>
@@ -317,7 +317,7 @@
                 var selected = $('#response_id :selected').val();
                 var responsetext = $('#response_text').val();
                 
-                var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=librisill_incomings&order_id=${order_id}&branch=[% decoded.library_code %]&action=response&timestamp=${timestamp}&response_id=${selected}&added_response=${responsetext}`;
+                var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=librisill_incomings&order_id=${order_id}&branch=[% decoded.library_code %]&action=response&timestamp=${timestamp}&response_id=${selected}&added_response=${responsetext}`;
         
                 if (may_reserve) {
                     url += `&may_reserve=${may_reserve}`;
@@ -346,7 +346,7 @@
             $.ajax({
                 type: "GET",
                 cache: true,
-                url: `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=getlibdata&sigel=${sigel}`,
+                url: `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=getlibdata&sigel=${sigel}`,
                 success: function (bibinfo) {                    
                     var sigel0 = bibinfo.libraries[0];
                     var sigel1 = bibinfo.libraries[1];
@@ -407,6 +407,9 @@
                                         </tr>
                                         <tr>
                                             <td>${sigelinfo.name}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>${sigelinfo.department}</td>
                                         </tr>
                                         <tr>
                                             <td>${sigelinfo.address1}</td>
