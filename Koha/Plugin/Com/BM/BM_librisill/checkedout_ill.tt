@@ -114,8 +114,7 @@
     
 
 [% MACRO jsinclude BLOCK %]
-    [% INCLUDE 'datatables.inc' %]
-    [% INCLUDE 'columns_settings.inc' %]
+    [% INCLUDE 'datatables.inc' %]    
     [% INCLUDE "$plugin_dir/librisill_js.inc" %]
     <script>
 
@@ -184,3 +183,4 @@
 [% END %]
 
 [% INCLUDE 'intranet-bottom.inc' %]
+
