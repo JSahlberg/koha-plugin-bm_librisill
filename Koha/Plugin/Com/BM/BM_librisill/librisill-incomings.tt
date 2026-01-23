@@ -181,8 +181,13 @@
 <!-- the main div is closed in intranet-bottom.inc -->
 
 [% MACRO jsinclude BLOCK %]
-    [% INCLUDE 'datatables.inc' %]
+    [% SET version = Koha.Version.maintenance %]
+
+    [% IF version <= '25.00.00' %]
     [% INCLUDE 'columns_settings.inc' %]
+    [% END%]
+    [% INCLUDE 'datatables.inc' %]
+
     [% INCLUDE "$plugin_dir/librisill_js.inc" %]
     <script>
 
@@ -328,125 +333,9 @@
             });
             
         });
-
-        
-        $('.adresslapplink').each(function () {
-            var sigel = $(this).attr('sigel');
-            var homebranch = $(this).attr('homebranch');
-            $(this).on('click', function (event) {
-                event.preventDefault();
-                printDiv(sigel, homebranch);
-            });
-        });
     
-
-
-        function printDiv(sigel, homebranch) {
-            
-            $.ajax({
-                type: "GET",
-                cache: true,
-                url: `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=getlibdata&sigel=${sigel}`,
-                success: function (bibinfo) {                    
-                    var sigel0 = bibinfo.libraries[0];
-                    var sigel1 = bibinfo.libraries[1];
-                    var branchinfo;
-                    var sigelinfo;
-                    if (sigel0.library_code == homebranch) {
-                        branchinfo = sigel0;
-                        sigelinfo = sigel1;
-                    } else {
-                        branchinfo = sigel1;
-                        sigelinfo = sigel0;
-                    }
-                                        
-                    let printWindow = window.open('', '', 'height=700, width=900');
-                    printWindow.document.open();
-                    printWindow.document.write(`
-                        <html>
-                        <head>
-                            <title>Adresslapp</title>
-                            <style type="text/css">
-                                body { font-family: Arial, sans-serif; }
-                                h1 { color: #333; }
-                                .adresslapp { width: 400px; border: 2px dotted #333 !important; padding: 30px; }
-                                #sender td { color:#888; font-size: small; }
-                                #reciever { padding-top: 30px; padding-left: 180px; }
-                                #reciever td { color:#000; font-size: large; }
-                                @media print {
-                                    .adresslapp { width: 400px; border: 2px dotted #333 !important; padding: 30px; }
-                                    #sender td { color:#888; font-size: small; }
-                                    #reciever { padding-top: 30px; padding-left: 180px; }
-                                    #reciever td { color:#000; font-size: large; }
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            <div class="adresslapp">
-                                <span style="float: right; font-size: xx-large;">A-post</span>
-                                <div>
-                                    <table id="sender" style="">
-                                        <tr>
-                                            <td>Avsändare:</td>
-                                        </tr>
-                                        <tr>
-                                            <td>${branchinfo.name}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>${branchinfo.address1}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>${branchinfo.zip_code} ${branchinfo.city}</td>
-                                        </tr>
-                                    </table>
-                                </div>
-                                <div>
-                                    <table id="reciever" style="">
-                                        <tr>
-                                            <td style="font-size: small !important;">Mottagare:</td>
-                                        </tr>
-                                        <tr>
-                                            <td>${sigelinfo.name}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>${sigelinfo.department}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>${sigelinfo.address1}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>${sigelinfo.zip_code} ${sigelinfo.city}</td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </div>
-                            
-                        </body>
-                        </html>
-                    `);
-
-                    //printWindow.document.close();
-                    printWindow.print();
-                    printWindow.close();
-                }
-            });
-        }
-
-  
-        /*
-        function PopupZ3950(fw, bib_id) {
-            var strQuery = GetZ3950Terms(fw);
-            if(strQuery){
-            window.open("/cgi-bin/koha/cataloguing/z3950_search.pl?biblionumber=0&stdid=" + bib_id + "&z3950_1=1&op=do_search&id=1","z3950search",'width=800,height=500,location=yes,toolbar=no,scrollbars=yes,resize=yes');
-            }
-        }
-
-        function GetZ3950Terms(fw){
-            var strQuery="&frameworkcode=" + fw;
-            return strQuery;
-        }
-        */
     </script>
     [% END %]
 
 [% INCLUDE 'intranet-bottom.inc' %]
+
