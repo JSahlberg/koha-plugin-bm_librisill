@@ -80,8 +80,12 @@
 <!-- the main div is closed in intranet-bottom.inc -->
 
 [% MACRO jsinclude BLOCK %]
-  [% INCLUDE 'datatables.inc' %]
+  [% SET version = Koha.Version.maintenance %]
+
+  [% IF version <= '25.00.00' %]
   [% INCLUDE 'columns_settings.inc' %]
+  [% END%]
+  [% INCLUDE 'datatables.inc' %]  
   [% INCLUDE "$plugin_dir/librisill_js.inc" %]
   
   <script>
@@ -109,3 +113,4 @@
 [% END %]
 
 [% INCLUDE 'intranet-bottom.inc' %]
+
