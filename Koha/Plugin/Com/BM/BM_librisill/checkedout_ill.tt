@@ -114,8 +114,12 @@
     
 
 [% MACRO jsinclude BLOCK %]
-    [% INCLUDE 'datatables.inc' %]
+    [% SET version = Koha.Version.maintenance %]
+
+    [% IF version <= '25.00.00' %]
     [% INCLUDE 'columns_settings.inc' %]
+    [% END%]
+    [% INCLUDE 'datatables.inc' %]    
     [% INCLUDE "$plugin_dir/librisill_js.inc" %]
     <script>
 
@@ -152,30 +156,6 @@
                 }
             });
 
-            // Setup filters before DataTables initialisation, in case some columns are
-            // hidden by default
-            
-            /*
-            var ill_table;
-            var filterColumnTimeoutId;
-            var filterColumn = function(e) {
-                clearTimeout(filterColumnTimeoutId);
-                filterColumnTimeoutId = setTimeout(function() {
-                    var input = $(e.target);
-                    var idx = input.parents('td').index();
-                    ill_table.api().column(idx + ':visible').search(input.val()).draw();
-                }, 200);
-            };
-            $('#ill_table thead input').on('change keyup keydown', filterColumn);
-            
-            var table_settings = [% TablesSettings.GetTableSettings('circ', 'view_holdsqueue', 'holds-table', 'json') | $raw %];
-            var ill_table = KohaTable("ill_table", {
-                "dom": 'B<"clearfix">t',
-                "orderCellsTop":  true,
-                "paginate": false
-            }, table_settings);
-            
-            */
         });
 
         console.log('[% plugin_dir %]');
@@ -184,3 +164,4 @@
 [% END %]
 
 [% INCLUDE 'intranet-bottom.inc' %]
+
