@@ -33,7 +33,8 @@
                 <table id="ill_resuests_table" class="dataTable ill_table">
                   <thead>
                     <tr>
-                      <th>Fjärrlånenummer</th>                      
+                      <th>Fjärrlånenummer</th>
+                      <th>Författare</th>                     
                       <th>Titel</th>
                       <th>Låntagare</th>
                       <th>Kortnummer/ID</th>
@@ -44,6 +45,7 @@
                     [% FOREACH ill_request IN decoded.ill_requests.reverse %]            
                     <tr>
                       <td><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill_request.lf_number %]" target="_blank">[% ill_request.lf_number %]</a></td>                      
+                      <td>[% ill_request.author %]</td>
                       <td>[% ill_request.title %]</td>
                       <td>
                       [% FOREACH username IN usernames %]
@@ -80,8 +82,12 @@
 <!-- the main div is closed in intranet-bottom.inc -->
 
 [% MACRO jsinclude BLOCK %]
-  [% INCLUDE 'datatables.inc' %]
+  [% SET version = Koha.Version.maintenance %]
+
+  [% IF version <= '25.00.00' %]
   [% INCLUDE 'columns_settings.inc' %]
+  [% END%]
+  [% INCLUDE 'datatables.inc' %]  
   [% INCLUDE "$plugin_dir/librisill_js.inc" %]
   
   <script>
@@ -109,3 +115,4 @@
 [% END %]
 
 [% INCLUDE 'intranet-bottom.inc' %]
+
