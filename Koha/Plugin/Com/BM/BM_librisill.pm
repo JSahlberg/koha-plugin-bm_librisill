@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.7.7";
+our $VERSION = "0.7.8";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -56,7 +56,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2026-01-30",
+    date_updated    => "2026-02-04",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -79,11 +79,13 @@ sub new {
 
 sub intranet_js {
     my ( $self ) = @_;
+    my $cgi = $self->{'cgi'};
+    my $startpage  = $self->retrieve_data('startpage');
 
-    return <<'EOF';
+    return q|
 <script>           
 
-    var receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=tool&subroutine=receive_ILL';
+    var receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=tool&subroutine=| . $startpage . q|';
 
     $(`
         <li class="nav-item">
@@ -105,7 +107,7 @@ sub intranet_js {
     }            
 
 </script>
-EOF
+|;
 }
 
 
@@ -119,8 +121,9 @@ sub configure {
     my $ccode      = $self->retrieve_data('ccode');
     my $notforloan = $self->retrieve_data('notforloan');
     my $loc        = $self->retrieve_data('loc');
+    my $startpage  = $self->retrieve_data('startpage');
 
-    warn "Config saved: " . $itemtype . ' ' . $ccode . ' ' . $notforloan . ' ' . $loc;
+    warn "Config saved: " . $itemtype . ' ' . $ccode . ' ' . $notforloan . ' ' . $loc . ' ' . $startpage;
     
      
     unless ( $cgi->param('save') && $cgi->param('token') eq $token ) {
@@ -137,6 +140,7 @@ sub configure {
             ill_ccode       => $ccode,
             ill_notforloan  => $notforloan,
             ill_loc         => $loc, 
+            startpage       => $startpage,
             token           => $token,
         );
 
@@ -149,7 +153,8 @@ sub configure {
                 itemtype    => $cgi->param('default-itemtype'),
                 ccode       => $cgi->param('default-ccode'),
                 notforloan  => $cgi->param('default-notforloan'),
-                loc         => $cgi->param('default-location'),                
+                loc         => $cgi->param('default-location'),
+                startpage   => $cgi->param('default-startpage'),                
                 token       => $token,               
             }
         );
