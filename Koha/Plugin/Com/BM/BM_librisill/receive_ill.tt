@@ -27,6 +27,8 @@
                     <div class="col-md-10 order-md-2 order-sm-1">
 
                         <h1>Fjärrlån in - Ankomstregistrera</h1>
+
+
                         
                         <div class="page-section">
 
@@ -97,6 +99,8 @@
                             <h3 style="color: red;">Fel: [% errormessage %]</h3>
                         </div>
                         [% END %]
+
+                        <input id="select_startpage" type="checkbox" value="receive_ILL">Sätt som startsida för fjärrlån</input>
                         
 
                     </div> <!-- /.col-sm-10.col-sm-push-2 -->
@@ -305,6 +309,20 @@
                     $(this).attr('style', 'background-color:rgb(255, 239, 200) !important');                    
                 }
             });
+
+            let checkStartpage = localStorage.getItem('startpage');
+
+            if (checkStartpage == 'receive_ILL') {
+                $('#select_startpage').prop('checked', true);
+            }
+            
+            $('#select_startpage').on('click', function() {
+                if ($(this).prop('checked')) {
+                    localStorage.setItem('startpage', $(this).val());
+                } else {
+                    localStorage.removeItem('startpage');
+                }
+            })
 
         });
     </script>
