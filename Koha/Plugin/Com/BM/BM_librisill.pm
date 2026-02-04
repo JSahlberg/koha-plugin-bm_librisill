@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.7.8";
+our $VERSION = "0.7.9";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -83,9 +83,17 @@ sub intranet_js {
     my $startpage  = $self->retrieve_data('startpage');
 
     return q|
-<script>           
+<script>
 
-    var receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=tool&subroutine=| . $startpage . q|';
+    var localStartpage = localStorage.getItem('startpage');
+
+    var receive_ILL_link;
+
+    if (localStartpage) {
+        receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=tool&subroutine=' + localStartpage;
+    } else {
+        receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=tool&subroutine=| . $startpage . q|';
+    }
 
     $(`
         <li class="nav-item">
