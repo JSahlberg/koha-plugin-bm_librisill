@@ -66,7 +66,7 @@ $stash->set('defined' => sub { return defined $_[0]; });
               <div id="startpage" class="form-group">
                 <dl class="form-input">                  
                   <dd><input name="default-startpage" type="radio" value="librisill_requests">Importera fjärrlån</input></dd>
-                  <dd><input name="default-startpage" type="radio" value="receive_ill">Ankomstregistrera fjärrlån</input></dd>
+                  <dd><input name="default-startpage" type="radio" value="receive_ILL">Ankomstregistrera fjärrlån</input></dd>
                 </dl>
               </div>
 
