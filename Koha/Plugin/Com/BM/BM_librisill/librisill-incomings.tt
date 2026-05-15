@@ -50,7 +50,7 @@
                                     </thead>
                                     <tbody>
                                         [% FOREACH ill_request IN decoded.ill_requests.reverse %]            
-                                        [% IF (ill_request.status == 'Uteliggande') || (ill_request.status == 'Läst') %]
+                                        [% IF (ill_request.status == 'Uteliggande') || (ill_request.status == 'Läst') || (ill_request.status == 'Remitterad') %]
                                         <tr>
                                             <td class="lf_number"><a href="https://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill_request.lf_number %]" target="_blank">[% ill_request.lf_number %]</a></td>
                                             <td class="request_id"><a href="https://iller.libris.kb.se/librisfjarrlan/lf.php?action=incoming&id=[% ill_request.request_id %]" target="_blank">[% ill_request.request_id %]</a></td>
@@ -109,7 +109,7 @@
                                     </thead>
                                     <tbody>
                                         [% FOREACH ill_request IN decoded.ill_requests.reverse %]
-                                        [% IF NOT ((ill_request.status == 'Uteliggande') || (ill_request.status == 'Läst')) %]
+                                        [% IF NOT ((ill_request.status == 'Uteliggande') || (ill_request.status == 'Läst')) || (ill_request.status == 'Remitterad') %]
                                         <tr>
                                             <td class="lf_number"><a href="https://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill_request.lf_number %]" target="_blank">[% ill_request.lf_number %]</a></td>
                                             <td class="request_id"><a href="https://iller.libris.kb.se/librisfjarrlan/lf.php?action=incoming&id=[% ill_request.request_id %]" target="_blank">[% ill_request.request_id %]</a></td>
