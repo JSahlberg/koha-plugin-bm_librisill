@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.8.0";
+our $VERSION = "0.8.1";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -56,7 +56,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2026-05-15",
+    date_updated    => "2026-05-19",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -403,13 +403,14 @@ JOIN
     LEFT JOIN borrowers ON (borrowers.borrowernumber=reserves.borrowernumber) 
 
 WHERE 
-    items.itype = '$itemtype' 
-    AND (items.notforloan = '$notforloan' OR items.notforloan = '-4')
+    items.itype = '$itemtype'     
     AND items.homebranch = '$branch'    
 
 ORDER BY items.dateaccessioned DESC
 
 ;");
+
+## AND (items.notforloan = '$notforloan' OR items.notforloan = '-4')
 
     my @ill_mappings = ();
     my @items = ();
@@ -437,6 +438,7 @@ ORDER BY items.dateaccessioned DESC
             itemnotes => $item->itemnotes,
             itemnotes_nonpublic => $item->itemnotes_nonpublic,
             notforloan => $item->notforloan,
+            datelastseen => $item->datelastseen,
         };        
     }
 
@@ -550,7 +552,8 @@ ORDER BY items.dateaccessioned DESC
         statuses        => $statuses,
         total           => $total,
         errormessage    => $error,
-        plugin_dir      => $self->bundle_path,        
+        plugin_dir      => $self->bundle_path,
+        notforloan      => $notforloan,        
     );
 
     output_html_with_http_headers $query, $cookie, $template->output;    
@@ -1868,6 +1871,3 @@ sub _append_to_field {
 }
 
 1;
-
-
-
