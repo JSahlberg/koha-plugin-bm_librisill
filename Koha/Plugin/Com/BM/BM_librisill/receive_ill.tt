@@ -53,6 +53,7 @@
                                                 
                                 <tbody>
                                 [% FOREACH ill IN ill_mappings %]
+                                    [% IF (ill.notforloan == notforloan) || (ill.notforloan == '-4') %]
                                     <tr>
                                         <td class="ill_dateaccessioned">[% ill.dateaccessioned | html %]</td>
                                         <td class="ill_title"><a href="/cgi-bin/koha/catalogue/detail.pl?biblionumber=[% ill.biblionumber | html %]" target="_blank">[% ill.title | html %]</a></td>
@@ -82,7 +83,8 @@
                                         [% END %]</td>
                                         <td style="text-align: center;"><button class="behandla btn btn-xs btn-primary" data-bs-toggle="modal" data-bs-target="#behandlaModal" ill_id="[% ill.ill_id | html %]" itemnumber="[% ill.itemnumber | html %]" barcode="[% ill.barcode | html %]" itemnotes="[% ill.itemnotes | html %]">Behandla</button></td>
                                         <td style="text-align: center;"><button class="delete_ill btn btn-xs btn-danger" biblionumber="[% ill.biblionumber | html %]" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Ta bort</button></td>
-                                    </tr>                    
+                                    </tr>
+                                    [% END %]
                                 [% END %]
                                 </tbody>
                             </table>
@@ -94,6 +96,79 @@
                             [% END %]
         
                         </div>
+
+                        <br>
+
+                        <h1>Fjärrlån in - Ankomstregistrerade</h1>
+                        
+                        <div class="page-section">
+
+                            [% IF ( total > 0 ) %]
+
+                            <!--<p><span>Antal förfrågningar: [% total | html %]</span></p>-->
+
+                            <table id="ill_search_registered_table" class="dataTable ill_table">
+                                <thead>
+                                    <tr>
+                                        <th>Skapad</th>
+                                        <th>Titel</th>
+                                        <th>Författare</th>
+                                        <th>Libris fjärrlån</th>
+                                        <th>Reserverad av</th>
+                                        <th>Aktivt bibliotek</th>
+                                        <th>Status</th>
+                                        <th>Ankomstregistrerad</th>
+                                        <th>Radera</th>
+                                    </tr>
+                                </thead>
+                                                
+                                <tbody>
+                                [% FOREACH ill IN ill_mappings %]
+                                    [% IF NOT (ill.notforloan == notforloan) || (ill.notforloan == '-4') %]
+                                    <tr>
+                                        <td class="ill_dateaccessioned">[% ill.dateaccessioned | html %]</td>
+                                        <td class="ill_title"><a href="/cgi-bin/koha/catalogue/detail.pl?biblionumber=[% ill.biblionumber | html %]" target="_blank">[% ill.title | html %]</a></td>
+                                        <td class="ill_author">[% ill.author | html %]</td>
+                                        <td class="ill_id"><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill.ill_id | html %]" target="_blank">[% ill.ill_id | html %]</a></td>
+                                        <td class="ill_borrowername">[% IF ( ill.borrowernumber ) %]<a href="/cgi-bin/koha/circ/circulation.pl?borrowernumber=[% ill.borrowernumber | html %]">[% ill.surname | html %], [% ill.firstname | html %][% ELSE %]<span style="color:#900">LÅNTAGARE SAKNAS</span><br /><a href="/cgi-bin/koha/reserve/request.pl?biblionumber=[% ill.biblionumber | html %]">Skapa reservation</a>[% END %]</a></td>
+                                        <td class="ill_active_library">
+                                        [% FOREACH il IN ill_requests %]
+                                            [% IF ( il.lf_number == ill.ill_id ) %]
+                                                [% FOREACH lib IN ill_libraries %]
+                                                    [% IF lib.sigel == il.active_library %]
+                                                        <a href="https://biblioteksdatabasen.libris.kb.se/library/[% lib.library_id %]/" target="_blank" data="[% lib.sigel %]">[% lib.sigel %] - [% lib.libraryname %]</a>
+                                                    [% END %]
+                                                [% END %]
+                                            [% END %]                                                
+                                        [% END %]</td>
+                                        <td class="ill_status">
+                                        [% FOREACH il IN ill_requests %]
+                                            [% IF ( il.lf_number == ill.ill_id ) %]
+                                                <b>[% il.status | html %]</b>
+                                                [% FOREACH rec IN il.recipients %]
+                                                    [% IF ( rec.is_active_library ) %]
+                                                        <br>[% rec.response_date | html %]
+                                                    [% END %]
+                                                [% END %]
+                                            [% END %]
+                                        [% END %]</td>
+                                        <td class="ill_datelastseen">[% ill.datelastseen %]</td>
+                                        <td style="text-align: center;"><button class="delete_ill btn btn-xs btn-danger" biblionumber="[% ill.biblionumber | html %]" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Ta bort</button></td>
+                                    </tr>
+                                    [% END %]
+                                [% END %]
+                                </tbody>
+                            </table>
+
+                            [% ELSE %]
+
+                            <p><span>Det finns inga aktuella fjärrlån. </span></p>  
+
+                            [% END %]
+        
+                        </div>
+
+
                         [% IF errormessage %]
                         <div class="page-section">
                             <h3 style="color: red;">Fel: [% errormessage %]</h3>
@@ -190,6 +265,26 @@
                 "topEnd" : "pageLength",                
             }
         });
+
+        new DataTable('#ill_search_registered_table', {
+            ordering: true,
+            columnDefs: [{ orderable: false, targets: [8] }],
+            order: [
+                [3, 'desc'],                
+            ],
+            bAutoWidth: false,
+            pageLength: 25,
+            language: {
+                "search" : "Sök:",
+                "lengthMenu" : "_MENU_ poster per sida",
+                "info" : "Visar _START_ till _END_ av _TOTAL_ poster",
+            },
+            layout: {
+                "topStart" : "search",
+                "topEnd" : "pageLength",                
+            }
+        });
+        
 
         
         $('.behandla').on('click', function() {
