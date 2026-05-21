@@ -28,7 +28,7 @@
 
                         <h1>Fjärrlån in - Ankomstregistrera</h1>
 
-
+                        <span style="line-height: 3;">Fjärrlån som ska ankomstregistreras.</span>
                         
                         <div class="page-section">
 
@@ -100,6 +100,8 @@
                         <br>
 
                         <h1>Fjärrlån in - Ankomstregistrerade</h1>
+
+                        <span style="line-height: 3;">Fjärrlån som har ankomstregistrerats och aviserats till låntagare.</span>
                         
                         <div class="page-section">
 
@@ -118,7 +120,7 @@
                                         <th>Aktivt bibliotek</th>
                                         <th>Status</th>
                                         <th>Ankomstregistrerad</th>
-                                        <th>Radera</th>
+                                        <th>Återlämna</th>
                                     </tr>
                                 </thead>
                                                 
@@ -153,7 +155,15 @@
                                             [% END %]
                                         [% END %]</td>
                                         <td class="ill_datelastseen">[% ill.datelastseen %]</td>
-                                        <td style="text-align: center;"><button class="delete_ill btn btn-xs btn-danger" biblionumber="[% ill.biblionumber | html %]" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Ta bort</button></td>
+                                        <td style="text-align: center;">
+                                            <form method="post" action="/cgi-bin/koha/circ/returns.pl" autocomplete="off">
+                                                <input type="hidden" name="op" value="cud-checkin">
+                                                [% INCLUDE 'csrf-token.inc' %]
+                                                <input type="hidden" name="barcode" value="[% ill.barcode %]">
+                                                <button class="btn btn-xs btn-primary" type="submit">Återlämna</button>
+                                            </form>
+                                        </td>
+                                        <!--<td style="text-align: center;"><button class="delete_ill btn btn-xs btn-danger" biblionumber="[% ill.biblionumber | html %]" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Ta bort</button></td>-->
                                     </tr>
                                     [% END %]
                                 [% END %]
