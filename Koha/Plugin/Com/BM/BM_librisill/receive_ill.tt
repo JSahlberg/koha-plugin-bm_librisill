@@ -118,9 +118,10 @@
                                         <th>Libris fjärrlån</th>
                                         <th>Reserverad av</th>
                                         <th>Aktivt bibliotek</th>
-                                        <th>Status</th>
+                                        <th>Streckkod</th>
+                                        <th>Lånetid</th>
                                         <th>Ankomstregistrerad</th>
-                                        <th>Återlämna</th>
+                                        <th>Åtgärd</th>
                                     </tr>
                                 </thead>
                                                 
@@ -143,18 +144,9 @@
                                                 [% END %]
                                             [% END %]                                                
                                         [% END %]</td>
-                                        <td class="ill_status">
-                                        [% FOREACH il IN ill_requests %]
-                                            [% IF ( il.lf_number == ill.ill_id ) %]
-                                                <b>[% il.status | html %]</b>
-                                                [% FOREACH rec IN il.recipients %]
-                                                    [% IF ( rec.is_active_library ) %]
-                                                        <br>[% rec.response_date | html %]
-                                                    [% END %]
-                                                [% END %]
-                                            [% END %]
-                                        [% END %]</td>
-                                        <td class="ill_datelastseen">[% ill.datelastseen %]</td>
+                                        <td class="ill_barcode">[% ill.barcode %]</td>
+                                        <td class="ill_duedate">[% ill.itemnotes %]</td>
+                                        <td class="ill_registred">[% ill.datelastseen %]</td>
                                         <td style="text-align: center;">
                                             <form method="post" action="/cgi-bin/koha/circ/returns.pl" autocomplete="off">
                                                 <input type="hidden" name="op" value="cud-checkin">
@@ -162,6 +154,7 @@
                                                 <input type="hidden" name="barcode" value="[% ill.barcode %]">
                                                 <button class="btn btn-xs btn-primary" type="submit">Återlämna</button>
                                             </form>
+                                            <button class="checkout btn btn-xs btn-success" data-bs-toggle="modal" data-bs-target="#checkoutModal" borrowernumber="[% ill.borrowernumber | html %]" borrowername="[% ill.surname | html %], [% ill.firstname | html %]" barcode="[% ill.barcode | html %]" itemnotes="[% ill.itemnotes | html %]">Låna ut</button>
                                         </td>
                                         <!--<td style="text-align: center;"><button class="delete_ill btn btn-xs btn-danger" biblionumber="[% ill.biblionumber | html %]" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Ta bort</button></td>-->
                                     </tr>
@@ -214,7 +207,7 @@
                     <fieldset class="rows">
                         <ol>
                             <li>
-                                <label>Beställning:</label>
+                                <label>Låntagare:</label>
                                 <span style="color: green;"><b class="modal_ill_id"></b></span>
                             </li>
                             <li>
@@ -244,6 +237,62 @@
                 </div>
             </div>
         </div>
+    </div>
+
+
+    <div class="modal modal-lg fade" id="checkoutModal" tabindex="-1" role="dialog" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="checkoutModalLabel">Låna ut fjärrlån</h3>
+                </div>
+                <div class="modal-body">
+                    
+                    <fieldset class="rows">
+                        <ol>
+                            <li>
+                                <label>Låntagare:</label>
+                                <span style="color: green;"><b class="modal_ill_borrowername"></b></span>
+                            </li>
+                            <li>
+                                <label>Titel:</label>
+                                <span class="modal_title"></span>
+                            </li>
+                            <li>
+                                <label>Författare:</label>
+                                <span class="modal_author"></span>
+                            </li>
+                            <li>
+                                <label>Streckkod:</label>
+                                <span id="modal_barcode" class="ill_barcode"></span>
+                            </li>
+                            <li style="padding-top: 30px;">
+                                <label>Notering:</label>
+                                <span id="reply_notes" class="itemnotes"></span>                                
+                            </li>
+                            <li style="padding-top: 30px;">
+                                <label>Återlämningsdatum:</label>
+                                <input name="duedate" id="checkout_duedate">                                
+                            </li>
+
+                        </ol>    
+                    </fieldset>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Stäng</button>
+                    <!--<button id="checkout_ill" type="button" class="btn btn-primary">Låna ut</button>-->
+                    
+                    <form method="post" action="/cgi-bin/koha/circ/circulation.pl" autocomplete="off">
+                        <input type="hidden" name="op" value="cud-checkout">
+                        [% INCLUDE 'csrf-token.inc' %]
+                        <input type="hidden" name="barcode" class="ill_barcode" value="">
+                        <input type="hidden" name="borrowernumber" class="modal_ill_borrowernumber" value="">
+                        <input type="hidden" name="duedatespec" id="checkout_duedate_input" value="">
+                        <button class="btn btn-primary" type="submit">Låna ut</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div> 
 
 
@@ -255,7 +304,16 @@
     [% END%]
     [% INCLUDE 'datatables.inc' %]    
     [% INCLUDE "$plugin_dir/librisill_js.inc" %]
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
     <script>
+
+        $('#checkout_duedate').flatpickr({
+            allowInput: true,
+            dateFormat: "Y-m-d",
+            minDate: "today",
+        });
 
         new DataTable('#ill_search_table', {
             ordering: true,
@@ -278,7 +336,7 @@
 
         new DataTable('#ill_search_registered_table', {
             ordering: true,
-            columnDefs: [{ orderable: false, targets: [8] }],
+            columnDefs: [{ orderable: false, targets: [9] }],
             order: [
                 [3, 'desc'],                
             ],
@@ -313,6 +371,7 @@
         $('#behandlaModal').on('shown.bs.modal', function (e) {
             $('#behandlaModal .itemnotes').focus();
         });
+
 
         $('#update_ill').on('click', function(e) {
             e.preventDefault();
@@ -360,6 +419,36 @@
                         $('#update_ill').remove();
                     }
             });
+        });
+
+
+        $('.checkout').on('click', function() {
+
+            $('#checkoutModal .modal_ill_borrowernumber').val( $(this).attr('borrowernumber') );
+            $('#checkoutModal .modal_ill_borrowername').text( $(this).attr('borrowername') );
+            $('#checkoutModal .modal_title').text( $(this).closest('tr').find('.ill_title').text().substr(0, 100) );
+            $('#checkoutModal .modal_author').text( $(this).closest('tr').find('.ill_author').text() );
+            $('#checkoutModal .itemnotes').text( $(this).attr('itemnotes') );
+            $('#checkoutModal .ill_barcode').val( $(this).attr('barcode') );
+
+            $('#checkout_duedate').on('change', function() {
+                $('#checkout_duedate_input').val( $(this).val() );
+            });
+                    
+        });
+
+
+        $('#checkout_ill').on('click', function(e) {
+            e.preventDefault();
+        
+            var borrowernumber = $('#checkoutModal').find('.modal_ill_borrowernumber').val();
+            var barcode = $('#checkoutModal').find('.ill_barcode').text();
+            var duedate = $('#checkout_duedate').val();
+            var token = $('input[name="csrf_token"]').val();
+
+            var checkouturl = `/cgi-bin/koha/circ/circulation.pl?borrowernumber=${borrowernumber}&csrf_token=${token}&op=checkout&barcode=${barcode}&duedatespec=${duedate}&branch=TIDA`;
+
+            window.open(checkouturl, '_blank');
         });
 
 
