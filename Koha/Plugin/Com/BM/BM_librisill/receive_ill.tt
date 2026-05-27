@@ -127,6 +127,7 @@
                                                 
                                 <tbody>
                                 [% FOREACH ill IN ill_mappings %]
+                                    [% IF ill.borrowernumber %]
                                     [% IF NOT (ill.notforloan == notforloan) || (ill.notforloan == '-4') %]
                                     <tr>
                                         <td class="ill_dateaccessioned">[% ill.dateaccessioned | html %]</td>
@@ -158,6 +159,7 @@
                                         </td>
                                         <!--<td style="text-align: center;"><button class="delete_ill btn btn-xs btn-danger" biblionumber="[% ill.biblionumber | html %]" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Ta bort</button></td>-->
                                     </tr>
+                                    [% END %]
                                     [% END %]
                                 [% END %]
                                 </tbody>
