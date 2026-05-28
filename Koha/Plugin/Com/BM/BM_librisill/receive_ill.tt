@@ -222,13 +222,13 @@
                             </li>
                             <li style="padding-top: 30px;">
                                 <label>Notering:</label>
-                                <input name="itemnotes" id="reply_notes" class="itemnotes" type="text" maxlength="9999" value="" autofocus>
+                                <input name="itemnotes" id="reply_notes" class="itemnotes" type="text" size="25" maxlength="9999" value="" autofocus>
                                 <a href="#" class="not_preReply"><span class="badge text-bg-primary">Öppen lånetid</span></a>
-                                <a href="#" class="not_preReply"><span class="badge text-bg-primary">Skall åter: </span></a>
+                                <a href="#" class="not_preReply_duedate"><span class="badge text-bg-primary">Återlämnas senast: </span></a>
                             </li>
                             <li>
                                 <label>Streckkod:</label>
-                                <input name="barcode" id="modal_barcode" class="ill_barcode" type="text" maxlength="9999" value="">
+                                <input name="barcode" id="modal_barcode" class="ill_barcode" type="text" size="25" maxlength="9999" value="">
                             </li>
                         </ol>    
                     </fieldset>
@@ -432,10 +432,28 @@
             $('#checkoutModal .modal_author').text( $(this).closest('tr').find('.ill_author').text() );
             $('#checkoutModal .itemnotes').text( $(this).attr('itemnotes') );
             $('#checkoutModal .ill_barcode').val( $(this).attr('barcode') );
+            $('#checkoutModal #modal_barcode').text( $(this).attr('barcode') );
 
             $('#checkout_duedate').on('change', function() {
                 $('#checkout_duedate_input').val( $(this).val() );
             });
+
+            if ($('#checkoutModal .itemnotes').text().includes('Återlämnas senast:')) {
+                var preduedate = $('#checkoutModal .itemnotes').text().replace('Återlämnas senast: ', '');
+                $('#checkout_duedate').flatpickr({
+                    allowInput: true,
+                    dateFormat: "Y-m-d",
+                    minDate: "today",
+                    defaultDate: preduedate,
+                });
+                $('#checkout_duedate_input').val( preduedate );                
+            } else {
+                $('#checkout_duedate').flatpickr({
+                    allowInput: true,
+                    dateFormat: "Y-m-d",
+                    minDate: "today",
+                });
+            }
                     
         });
 
@@ -493,8 +511,36 @@
 
             $('.not_preReply').on('click', function(event) {
                 event.preventDefault();
-                $('#reply_notes').val($(this).text()).change().focus();
+                $('#reply_notes').val($(this).text()).change();
+                $('#modal_barcode').focus();
             });
+
+            $('.not_preReply_duedate').on('click', function(event) {
+                event.preventDefault();
+                $('#ill_duedate').remove();
+                $('<input name="ill_duedate" id="ill_duedate">').insertAfter($(this));
+                $('#ill_duedate').flatpickr({
+                    allowInput: true,
+                    dateFormat: "Y-m-d",
+                    minDate: "today",
+                    onClose: function(selectedDates, dateStr, instance) {
+                        $('#ill_duedate').hide();
+                        $('#modal_barcode').focus();
+                    }
+                });
+
+                $('#ill_duedate').trigger('click');
+                $('#ill_duedate').on('change', function() {
+                    $('#reply_notes').val(`Återlämnas senast: ${$(this).val()}`).change().focus();
+                    $('#ill_duedate').remove();
+                    $('#modal_barcode').focus();
+                });
+
+                
+                
+                //$('#reply_notes').val($(this).text()).change().focus();
+            });
+            
 
             $('.ill_status').each(function() {
                 if ($(this).html().includes('Levererad')) {
