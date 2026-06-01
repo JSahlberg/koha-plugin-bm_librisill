@@ -315,6 +315,17 @@
             allowInput: true,
             dateFormat: "Y-m-d",
             minDate: "today",
+            locale: {
+                firstDayOfWeek: 1,
+                weekdays: {
+                    shorthand: ['Sön', 'Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör'],
+                    longhand: ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'],
+                },
+                months: {
+                    shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'],
+                    longhand: ['Januari', 'Februari', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Augusti', 'September', 'Oktober', 'November', 'December'],
+                },
+            },
         });
 
         new DataTable('#ill_search_table', {
@@ -445,6 +456,17 @@
                     dateFormat: "Y-m-d",
                     minDate: "today",
                     defaultDate: preduedate,
+                    locale: {
+                        firstDayOfWeek: 1,
+                        weekdays: {
+                            shorthand: ['Sön', 'Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör'],
+                            longhand: ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'],
+                        },
+                        months: {
+                            shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'],
+                            longhand: ['Januari', 'Februari', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Augusti', 'September', 'Oktober', 'November', 'December'],
+                        },
+                    },
                 });
                 $('#checkout_duedate_input').val( preduedate );                
             } else {
@@ -452,6 +474,17 @@
                     allowInput: true,
                     dateFormat: "Y-m-d",
                     minDate: "today",
+                    locale: {
+                        firstDayOfWeek: 1,
+                        weekdays: {
+                            shorthand: ['Sön', 'Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör'],
+                            longhand: ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'],
+                        },
+                        months: {
+                            shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'],
+                            longhand: ['Januari', 'Februari', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Augusti', 'September', 'Oktober', 'November', 'December'],
+                        },
+                    },
                 });
             }
                     
@@ -523,6 +556,17 @@
                     allowInput: true,
                     dateFormat: "Y-m-d",
                     minDate: "today",
+                    locale: {
+                        firstDayOfWeek: 1,
+                        weekdays: {
+                            shorthand: ['Sön', 'Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör'],
+                            longhand: ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'],
+                        },
+                        months: {
+                            shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'],
+                            longhand: ['Januari', 'Februari', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Augusti', 'September', 'Oktober', 'November', 'December'],
+                        },
+                    },
                     onClose: function(selectedDates, dateStr, instance) {
                         $('#ill_duedate').hide();
                         $('#modal_barcode').focus();
