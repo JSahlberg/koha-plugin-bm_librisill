@@ -315,7 +315,6 @@
             allowInput: true,
             dateFormat: "Y-m-d",
             minDate: "today",
-            locale: swedish
         });
 
         new DataTable('#ill_search_table', {
