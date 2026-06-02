@@ -48,7 +48,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.8.4";
+our $VERSION = "0.8.5";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -56,7 +56,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2026-05-28",
+    date_updated    => "2026-06-02",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -114,6 +114,20 @@ sub intranet_js {
         `);
     }            
 
+    if ($('#circ_circulation').length) {
+        if ($('#holdswaiting').length) {
+            $('.waiting-hold-here').each(function() {
+                if ($(this).find('a').text().includes('FJÄRRLÅN')) {
+                    var barcode = $(this).find('.barcode').text().trim().slice(1, -1);
+                    console.log('Barcode: ' + barcode);
+                    $(this).prepend(`
+                        <a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Com::BM::BM_librisill&method=tool&subroutine=receive_ILL&barcode=${barcode}">Låna ut</a>
+                    `);
+                }               
+            });            
+        }    
+    }
+    
 </script>
 |;
 }
@@ -368,6 +382,8 @@ sub receive_ILL {
     
     warn "Offset: " . $ill_id_offset;
 
+    my $barcode = $query->param('barcode');
+
     my $itemtype = $self->retrieve_data('itemtype');
     my $ccode = $self->retrieve_data('ccode');
     my $notforloan = $self->retrieve_data('notforloan');
@@ -553,7 +569,8 @@ ORDER BY items.dateaccessioned DESC
         total           => $total,
         errormessage    => $error,
         plugin_dir      => $self->bundle_path,
-        notforloan      => $notforloan,        
+        notforloan      => $notforloan,
+        barcode         => $barcode,       
     );
 
     output_html_with_http_headers $query, $cookie, $template->output;    
