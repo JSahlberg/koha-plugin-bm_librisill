@@ -116,7 +116,7 @@ sub intranet_js {
 
     if ($('#circ_circulation').length) {
         if ($('#holdswaiting').length) {
-            $('.waiting-hold-here').each(function() {
+            $('.waiting-hold-here, .waiting-hold-elsewhere').each(function() {
                 if ($(this).find('a').text().includes('FJÄRRLÅN')) {
                     var barcode = $(this).find('.barcode').text().trim().slice(1, -1);
                     console.log('Barcode: ' + barcode);
