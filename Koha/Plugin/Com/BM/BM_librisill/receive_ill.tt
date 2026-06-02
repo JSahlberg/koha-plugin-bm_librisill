@@ -26,6 +26,8 @@
                 <div class="row">
                     <div class="col-md-10 order-md-2 order-sm-1">
 
+                        [% IF NOT barcode %]                        
+                        
                         <h1>Fjärrlån in - Ankomstregistrera</h1>
 
                         <span style="line-height: 3;">Fjärrlån som ska ankomstregistreras.</span>
@@ -98,6 +100,8 @@
                         </div>
 
                         <br>
+
+                        [% END %]
 
                         <h1>Fjärrlån in - Ankomstregistrerade</h1>
 
@@ -363,11 +367,16 @@
             layout: {
                 "topStart" : "search",
                 "topEnd" : "pageLength",                
-            }
+            },
+            [% IF barcode %]
+            search: {
+                "search" : "[% barcode %]",
+            }    
+            [% END %]
         });
-        
 
-        
+
+                
         $('.behandla').on('click', function() {
 
             $('#behandlaModal .itemnumber').val( $(this).attr('itemnumber') );
@@ -609,6 +618,15 @@
                     localStorage.removeItem('startpage');
                 }
             })
+
+
+            [% IF barcode %]
+            $('.checkout').each(function() {
+                if ( $(this).attr('barcode') == '[% barcode %]' ) {
+                    $(this).trigger('click');
+                }
+            });
+            [% END %]
 
         });
     </script>
