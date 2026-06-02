@@ -118,7 +118,8 @@ sub intranet_js {
         if ($('#holdswaiting').length) {
             $('li').each(function() {
                 if ($(this).find('a').text().includes('FJÄRRLÅN')) {
-                    var barcode = $(this).find('.barcode').text().trim().slice(1, -1);
+                    //var barcode = $(this).find('.barcode').text().trim().slice(1, -1); 
+                    var barcode = $(this).find('a').text().trim();
                     console.log('Barcode: ' + barcode);
                     $(this).append(`
                         <a class="btn btn-xs btn-primary" style="display:block;margin-top:5px;" href="/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Com::BM::BM_librisill&method=tool&subroutine=receive_ILL&barcode=${barcode}">Låna ut</a>
