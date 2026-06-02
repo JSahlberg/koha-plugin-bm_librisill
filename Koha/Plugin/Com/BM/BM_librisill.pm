@@ -120,14 +120,22 @@ sub intranet_js {
                 if ($(this).find('a').text().includes('FJÄRRLÅN')) {
                     var barcode = $(this).find('.barcode').text().trim().slice(1, -1);
                     console.log('Barcode: ' + barcode);
-                    $(this).prepend(`
-                        <a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Com::BM::BM_librisill&method=tool&subroutine=receive_ILL&barcode=${barcode}">Låna ut</a>
+                    $(this).append(`
+                        <a class="btn btn-xs btn-primary" style="display:block;margin-top:5px;" href="/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Com::BM::BM_librisill&method=tool&subroutine=receive_ILL&barcode=${barcode}">Låna ut</a>
                     `);
+                    $(this).css({
+                        'background-color': 'white',
+                        'padding' : '10px 10px',
+                        'border-radius' : '5px',
+                        'border' : '1px solid lightgray'
+                    });
+                    $(this).find('.holddate').css('display', 'block');
                 }               
             });            
         }    
     }
-    
+
+
 </script>
 |;
 }
