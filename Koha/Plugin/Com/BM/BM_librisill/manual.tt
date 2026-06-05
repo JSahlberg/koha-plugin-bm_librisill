@@ -1,0 +1,59 @@
+[% USE raw %]
+[% USE Asset %]
+[% USE Koha %]
+[% USE KohaDates %]
+[% USE ItemTypes %]
+[% USE Branches %]
+[% USE AuthorisedValues %]
+[% USE TablesSettings %]
+[% PROCESS 'i18n.inc' %]
+[% SET footerjs = 1 %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>Fjärrlån - Manual för fjärrlån</title>
+[% INCLUDE 'doc-head-close.inc' %]
+<style> p { margin-top: 0; }</style>
+</head>
+
+<body id="manual_ill" class="circ">
+    [% WRAPPER 'header.inc' %]
+        [% INCLUDE 'home-search.inc' %]
+    [% END %]
+        
+<div class="main container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <main>
+                <div class="row">
+                    <div class="col-md-10 order-md-2 order-sm-1">
+
+
+                        
+
+                    </div> <!-- /.col-sm-10.col-sm-push-2 -->
+                    <div class="col-md-2 order-sm-2 order-md-1">
+                        <aside>
+                            [% INCLUDE "$plugin_dir/ill_toolbar.inc" %]
+                        </aside>
+                    </div> <!-- /.col-md-2.order-md-1 -->                            
+                </div> <!-- /.row -->
+            </main>
+        </div> <!-- /.col-sm-12 -->
+    </div> <!-- /.row -->
+
+    
+    
+
+[% MACRO jsinclude BLOCK %]
+    [% SET version = Koha.Version.maintenance %]
+
+    [% IF version <= '25.00.00' %]
+    [% INCLUDE 'columns_settings.inc' %]
+    [% END%]
+    [% INCLUDE 'datatables.inc' %]    
+    [% INCLUDE "$plugin_dir/librisill_js.inc" %]
+    
+    <script>
+    </script>
+[% END %]
+
+[% INCLUDE 'intranet-bottom.inc' %]
