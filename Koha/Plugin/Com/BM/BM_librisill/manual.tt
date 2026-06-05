@@ -27,6 +27,8 @@
                     <div class="col-md-10 order-md-2 order-sm-1">
 
 
+                        <div id="pdf-viewer" style="height: 100vh"></div>
+ 
                         
 
                     </div> <!-- /.col-sm-10.col-sm-push-2 -->
@@ -52,8 +54,19 @@
     [% INCLUDE 'datatables.inc' %]    
     [% INCLUDE "$plugin_dir/librisill_js.inc" %]
     
-    <script>
+    <script type="module">
+        import EmbedPDF from 'https://cdn.jsdelivr.net/npm/@embedpdf/snippet@2/dist/embedpdf.js';
+        
+        EmbedPDF.init({
+            type: 'container',
+            target: document.getElementById('pdf-viewer'),
+            src: '[% PLUGIN_PATH %]/manual.pdf',
+            theme: { preference: 'system' }
+        });
+
+        console.log('[% PLUGIN_PATH %]');
     </script>
+    
 [% END %]
 
 [% INCLUDE 'intranet-bottom.inc' %]
