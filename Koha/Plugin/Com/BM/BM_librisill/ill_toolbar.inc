@@ -38,6 +38,9 @@
     <ul>
         <li>            
             <a href="#" id="modalprintadresslapp">Skriv ut adresslapp</a>
+        </li>
+        <li>
+            <a href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=manual">Manual för fjärrlån</a>
         </li>                
     </ul>
 [% IF version <= '25.00.00' %]
