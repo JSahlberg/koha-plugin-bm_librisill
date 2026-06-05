@@ -252,7 +252,9 @@ sub tool {
     if ($sub eq 'import_ill') {
         my $result = import_ill($self, $query);    
     }
-
+    if ($sub eq 'manual') {
+        my $result = manual($self, $query);    
+    }
 }
 
 
@@ -1894,6 +1896,28 @@ sub _append_to_field {
 
     return $record;
 
+}
+
+sub manual {
+    my ( $self, $args ) = @_;
+
+    my $query = CGI->new;
+
+    my ( $template, $loggedinuser, $cookie, $flags ) = get_template_and_user(
+        {
+            template_name   => $self->mbf_path("manual.tt"),
+            query           => $query,
+            type            => "intranet",
+            authnotrequired => 1,
+            flagsrequired   => {}
+        }
+    );
+
+    $template->param(
+        plugin_dir      => $self->bundle_path,       
+    );
+
+    output_html_with_http_headers $query, $cookie, $template->output;    
 }
 
 1;
