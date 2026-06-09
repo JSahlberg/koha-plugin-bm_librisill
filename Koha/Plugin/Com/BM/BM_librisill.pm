@@ -412,7 +412,9 @@ SELECT DISTINCT
     biblio.author, 
     borrowers.borrowernumber, 
     borrowers.surname, 
-    borrowers.firstname, 
+    borrowers.firstname,
+    reserves.found,
+    branches.branchname,
     CASE
         
         WHEN items.homebranch='$branch_fixed' AND LOCATE ('$branch_fixed-', itemnotes_nonpublic) > 0
@@ -430,6 +432,7 @@ JOIN
     items ON (items.biblionumber=biblio.biblionumber) 
     LEFT JOIN reserves ON (reserves.biblionumber=biblio.biblionumber) 
     LEFT JOIN borrowers ON (borrowers.borrowernumber=reserves.borrowernumber)
+    LEFT JOIN branches ON (branches.branchcode=reserves.branchcode)
     
 WHERE 
     items.itype = '$itemtype'     
@@ -462,7 +465,9 @@ ORDER BY items.dateaccessioned DESC
             borrowernumber  => $ill->[5],
             surname  => $ill->[6],
             firstname  => $ill->[7],
-            ill_id => $ill->[8],            
+            status => $ill->[8],
+            branchname => $ill->[9],
+            ill_id => $ill->[10],            
             barcode => $item->barcode,
             itemnotes => $item->itemnotes,
             itemnotes_nonpublic => $item->itemnotes_nonpublic,
