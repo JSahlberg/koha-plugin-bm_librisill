@@ -124,14 +124,15 @@
                                         <th>Aktivt bibliotek</th>
                                         <th>Streckkod</th>
                                         <th>Lånetid</th>
-                                        <th>Ankomstregistrerad</th>
+                                        <th>Status</th>
+                                        <th>Ankomstregistrerad</th>                                        
                                         <th>Åtgärd</th>
                                     </tr>
                                 </thead>
                                                 
                                 <tbody>
                                 [% FOREACH ill IN ill_mappings %]
-                                    [% IF ill.borrowernumber %]
+                                    [% IF ill.borrowernumber && (ill.status == 'W' || ill.status == 'T')%]
                                     [% IF NOT (ill.notforloan == notforloan) || (ill.notforloan == '-4') %]
                                     <tr>
                                         <td class="ill_dateaccessioned">[% ill.dateaccessioned | html %]</td>
@@ -151,7 +152,8 @@
                                         [% END %]</td>
                                         <td class="ill_barcode">[% ill.barcode %]</td>
                                         <td class="ill_duedate">[% ill.itemnotes %]</td>
-                                        <td class="ill_registred">[% ill.datelastseen %]</td>
+                                        <td class="ill_status">[% IF ill.status == 'W' %]<span style="color:green;">Väntar på [% ill.branchname %][% ELSE %]<span style="color:#d00;">Under transport till [% ill.branchname %]</span>[% END %]</td>
+                                        <td class="ill_registred">[% ill.datelastseen %]</td>                                        
                                         <td style="text-align: center;">
                                             <div style="display: inline-flex;">
                                                 <form method="post" action="/cgi-bin/koha/circ/returns.pl" autocomplete="off">
