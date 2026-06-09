@@ -153,13 +153,15 @@
                                         <td class="ill_duedate">[% ill.itemnotes %]</td>
                                         <td class="ill_registred">[% ill.datelastseen %]</td>
                                         <td style="text-align: center;">
-                                            <form method="post" action="/cgi-bin/koha/circ/returns.pl" autocomplete="off">
-                                                <input type="hidden" name="op" value="cud-checkin">
-                                                [% INCLUDE 'csrf-token.inc' %]
-                                                <input type="hidden" name="barcode" value="[% ill.barcode %]">
-                                                <button class="btn btn-xs btn-primary" type="submit">Återlämna</button>
-                                            </form>
-                                            <button class="checkout btn btn-xs btn-success" data-bs-toggle="modal" data-bs-target="#checkoutModal" borrowernumber="[% ill.borrowernumber | html %]" borrowername="[% ill.surname | html %], [% ill.firstname | html %]" barcode="[% ill.barcode | html %]" itemnotes="[% ill.itemnotes | html %]">Låna ut</button>
+                                            <div style="display: inline-flex;">
+                                                <form method="post" action="/cgi-bin/koha/circ/returns.pl" autocomplete="off">
+                                                    <input type="hidden" name="op" value="cud-checkin">
+                                                    [% INCLUDE 'csrf-token.inc' %]
+                                                    <input type="hidden" name="barcode" value="[% ill.barcode %]">
+                                                    <button class="btn btn-xs btn-primary" type="submit">Återlämna</button>
+                                                </form>
+                                                <button class="checkout btn btn-xs btn-success" style="margin: 0 0 0 10px;" data-bs-toggle="modal" data-bs-target="#checkoutModal" borrowernumber="[% ill.borrowernumber | html %]" borrowername="[% ill.surname | html %], [% ill.firstname | html %]" barcode="[% ill.barcode | html %]" itemnotes="[% ill.itemnotes | html %]">Låna ut</button>
+                                            </div>
                                         </td>
                                         <!--<td style="text-align: center;"><button class="delete_ill btn btn-xs btn-danger" biblionumber="[% ill.biblionumber | html %]" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Ta bort</button></td>-->
                                     </tr>
