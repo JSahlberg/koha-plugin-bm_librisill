@@ -128,7 +128,8 @@ sub intranet_js {
                         'background-color': 'white',
                         'padding' : '10px 10px',
                         'border-radius' : '5px',
-                        'border' : '1px solid lightgray'
+                        'border' : '1px solid lightgray',
+                        'max-width' : '600px'
                     });
                     $(this).find('.holddate').css('display', 'block');
                 }               
@@ -416,10 +417,11 @@ SELECT DISTINCT
         
         WHEN items.homebranch='$branch_fixed' AND LOCATE ('$branch_fixed-', itemnotes_nonpublic) > 0
         THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('$branch_fixed-', itemnotes_nonpublic), $ill_id_offset)
-
+    
     ELSE
         NULL
-    END 
+    END
+    
 
 FROM 
     biblio 
@@ -427,8 +429,8 @@ FROM
 JOIN 
     items ON (items.biblionumber=biblio.biblionumber) 
     LEFT JOIN reserves ON (reserves.biblionumber=biblio.biblionumber) 
-    LEFT JOIN borrowers ON (borrowers.borrowernumber=reserves.borrowernumber) 
-
+    LEFT JOIN borrowers ON (borrowers.borrowernumber=reserves.borrowernumber)
+    
 WHERE 
     items.itype = '$itemtype'     
     AND items.homebranch = '$branch'    
@@ -460,7 +462,7 @@ ORDER BY items.dateaccessioned DESC
             borrowernumber  => $ill->[5],
             surname  => $ill->[6],
             firstname  => $ill->[7],
-            ill_id => $ill->[8],                
+            ill_id => $ill->[8],            
             barcode => $item->barcode,
             itemnotes => $item->itemnotes,
             itemnotes_nonpublic => $item->itemnotes_nonpublic,
