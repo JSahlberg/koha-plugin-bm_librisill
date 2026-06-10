@@ -58,7 +58,7 @@
                                     [% IF (ill.notforloan == notforloan) || (ill.notforloan == '-4') %]
                                     <tr>
                                         <td class="ill_dateaccessioned">[% ill.dateaccessioned | html %]</td>
-                                        <td class="ill_title"><a href="/cgi-bin/koha/catalogue/detail.pl?biblionumber=[% ill.biblionumber | html %]" target="_blank">[% ill.title | html %]</a></td>
+                                        <td class="ill_title"><a href="/cgi-bin/koha/catalogue/detail.pl?biblionumber=[% ill.biblionumber | html %]" target="_blank">[% ill.title | html %] [% ill.series %]</a></td>
                                         <td class="ill_author">[% ill.author | html %]</td>
                                         <td class="ill_id"><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill.ill_id | html %]" target="_blank">[% ill.ill_id | html %]</a></td>
                                         <td class="ill_borrowername">[% IF ( ill.borrowernumber ) %]<a href="/cgi-bin/koha/circ/circulation.pl?borrowernumber=[% ill.borrowernumber | html %]">[% ill.surname | html %], [% ill.firstname | html %][% ELSE %]<span style="color:#900">LÅNTAGARE SAKNAS</span><br /><a href="/cgi-bin/koha/reserve/request.pl?biblionumber=[% ill.biblionumber | html %]">Skapa reservation</a>[% END %]</a></td>
@@ -83,7 +83,7 @@
                                                 [% END %]
                                             [% END %]
                                         [% END %]</td>
-                                        <td style="text-align: center;"><button class="behandla btn btn-xs btn-primary" data-bs-toggle="modal" data-bs-target="#behandlaModal" ill_id="[% ill.ill_id | html %]" itemnumber="[% ill.itemnumber | html %]" barcode="[% ill.barcode | html %]" itemnotes="[% ill.itemnotes | html %]">Behandla</button></td>
+                                        <td style="text-align: center;">[% IF ( ill.borrowernumber ) %]<button class="behandla btn btn-xs btn-primary" data-bs-toggle="modal" data-bs-target="#behandlaModal" ill_id="[% ill.ill_id | html %]" itemnumber="[% ill.itemnumber | html %]" barcode="[% ill.barcode | html %]" itemnotes="[% ill.itemnotes | html %]">Behandla</button>[% ELSE %]<button class="btn btn-xs btn-default" disabled>Behandla</button>[% END %]</td>
                                         <td style="text-align: center;"><button class="delete_ill btn btn-xs btn-danger" biblionumber="[% ill.biblionumber | html %]" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Ta bort</button></td>
                                     </tr>
                                     [% END %]
@@ -136,7 +136,7 @@
                                     [% IF NOT (ill.notforloan == notforloan) || (ill.notforloan == '-4') %]
                                     <tr>
                                         <td class="ill_dateaccessioned">[% ill.dateaccessioned | html %]</td>
-                                        <td class="ill_title"><a href="/cgi-bin/koha/catalogue/detail.pl?biblionumber=[% ill.biblionumber | html %]" target="_blank">[% ill.title | html %]</a></td>
+                                        <td class="ill_title"><a href="/cgi-bin/koha/catalogue/detail.pl?biblionumber=[% ill.biblionumber | html %]" target="_blank">[% ill.title | html %] [% ill.series %]</a></td>
                                         <td class="ill_author">[% ill.author | html %]</td>
                                         <td class="ill_id"><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill.ill_id | html %]" target="_blank">[% ill.ill_id | html %]</a></td>
                                         <td class="ill_borrowername">[% IF ( ill.borrowernumber ) %]<a href="/cgi-bin/koha/circ/circulation.pl?borrowernumber=[% ill.borrowernumber | html %]">[% ill.surname | html %], [% ill.firstname | html %][% ELSE %]<span style="color:#900">LÅNTAGARE SAKNAS</span><br /><a href="/cgi-bin/koha/reserve/request.pl?biblionumber=[% ill.biblionumber | html %]">Skapa reservation</a>[% END %]</a></td>
@@ -427,7 +427,7 @@
                         $('#behandlaModal .modal-body').html(`
                             <h2>Uppdaterad!</h2>                            
                         `);
-                        $('#behandlaModal .modal-footer').prepend(`
+                        $('#behandlaModal .modal-footer').html(`
                             <form method="post" action="/cgi-bin/koha/circ/returns.pl" autocomplete="off">
                                 <input type="hidden" name="op" value="cud-checkin">
                                 [% INCLUDE 'csrf-token.inc' %]
@@ -437,6 +437,16 @@
                         `);
                         $('#checkin_ill').focus();
                         $('#update_ill').remove();
+                        var countdown = 3;
+                        var timetoclick = setInterval(function() {
+                            if (countdown > 0) {
+                                $('#checkin_ill').text(`Skriver ut kvitto om (${countdown})`);
+                                countdown--;
+                            } else {
+                                clearInterval(timetoclick);
+                                $('#checkin_ill').trigger('click');                                                                                             
+                            }
+                        }, 1000);
                     } else {
                         $('#behandlaModal .modal-body').html(`
                             <h2>Ej uppdaterad!</h2>
@@ -526,6 +536,8 @@
                 var itemnumber = $(this).attr('itemnumber');
                 var borrowernumber = $(this).attr('borrowernumber');
 
+                var this_ill = $(this);
+
                 var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=delete_ILL&biblionumber=${biblionumber}&itemnumber=${itemnumber}&borrowernumber=${borrowernumber}`;
 
                 $.ajax({
@@ -534,8 +546,11 @@
                     cache: true,
                 }).done(function (data) {
                     if ( data.error == '0' ) {                        
-                        console.log('Borttagen!');
-                        window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=receive_ILL';
+                        //console.log('Borttagen!');
+                        //console.log(data);                        
+                        this_ill.closest('tr').children('td').css('opacity', '0.3');                        
+                        this_ill.closest('td').html('Borttagen!');
+                        //window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=receive_ILL';
                     } else {
                         alert('Fel: Gick inte att ta bort.');
                     }
