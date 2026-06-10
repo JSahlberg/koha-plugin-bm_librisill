@@ -11,6 +11,7 @@ use C4::Auth qw( get_template_and_user );
 use C4::Output qw( output_html_with_http_headers );
 use C4::Biblio qw( AddBiblio ModBiblio DelBiblio );
 use C4::Reserves qw( AddReserve ModReserve);
+use Koha::BackgroundJob::BatchDeleteItem;
 
 use utf8;
 use URI;
@@ -48,7 +49,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.8.6";
+our $VERSION = "0.8.7";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -56,7 +57,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2026-06-09",
+    date_updated    => "2026-06-10",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -415,6 +416,7 @@ SELECT DISTINCT
     borrowers.firstname,
     reserves.found,
     branches.branchname,
+    CONCAT (biblio.seriestitle, biblioitems.volume),
     CASE
         
         WHEN items.homebranch='$branch_fixed' AND LOCATE ('$branch_fixed-', itemnotes_nonpublic) > 0
@@ -433,6 +435,7 @@ JOIN
     LEFT JOIN reserves ON (reserves.biblionumber=biblio.biblionumber) 
     LEFT JOIN borrowers ON (borrowers.borrowernumber=reserves.borrowernumber)
     LEFT JOIN branches ON (branches.branchcode=reserves.branchcode)
+    LEFT JOIN biblioitems ON (biblioitems.biblionumber=biblio.biblionumber)
     
 WHERE 
     items.itype = '$itemtype'     
@@ -467,7 +470,8 @@ ORDER BY items.dateaccessioned DESC
             firstname  => $ill->[7],
             status => $ill->[8],
             branchname => $ill->[9],
-            ill_id => $ill->[10],            
+            series => $ill->[10],
+            ill_id => $ill->[11],            
             barcode => $item->barcode,
             itemnotes => $item->itemnotes,
             itemnotes_nonpublic => $item->itemnotes_nonpublic,
@@ -647,6 +651,8 @@ sub delete_ILL {
         error => 0,
     );
 
+    my $job;
+
     if ( $biblionumber ) {
 
         my $holds = Koha::Holds->search({ biblionumber => $biblionumber });
@@ -657,17 +663,30 @@ sub delete_ILL {
 
         my $items = Koha::Items->search({ biblionumber => $biblionumber });
         my $all_deleted = 1;
-        while ( my $item = $items->next ) {
-            if ($item->itype eq $self->retrieve_data('itemtype') ) {
-                $item->delete;
-            } else {
-                $all_deleted = 0;
+
+        my @itemnumbers = ($itemnumber);
+        
+        $job = Koha::BackgroundJob::BatchDeleteItem->new->enqueue(
+            {
+                record_ids => \@itemnumbers,
+                delete_biblios => 1,
             }
-        }
-        # Delete the record
-        if ($all_deleted) {
-            my $delerror = C4::Biblio::DelBiblio( $biblionumber );
-        }
+        );
+
+        $error{job_id} = $job;
+        
+        
+        #while ( my $item = $items->next ) {
+        #    if ($item->itype eq $self->retrieve_data('itemtype') ) {
+        #        $item->delete;
+        #    } else {
+        #        $all_deleted = 0;
+        #    }
+        #}
+        ## Delete the record
+        #if ($all_deleted) {
+        #    my $delerror = C4::Biblio::DelBiblio( $biblionumber );
+        #}
 
     } else {
         $error{error} = 1;
@@ -726,7 +745,8 @@ SELECT DISTINCT
     biblio.author,
     borrowers.borrowernumber,
     borrowers.surname,
-    borrowers.firstname,    
+    borrowers.firstname,
+    CONCAT (biblio.seriestitle, biblioitems.volume),
     CASE
         
         WHEN items.homebranch='$branch_fixed' AND LOCATE ('$branch_fixed-', itemnotes_nonpublic) > 0
@@ -741,6 +761,7 @@ FROM
     LEFT JOIN biblio ON (biblio.biblionumber=items.biblionumber)
     LEFT JOIN issues ON (issues.itemnumber=items.itemnumber)
     LEFT JOIN borrowers ON (borrowers.borrowernumber=issues.borrowernumber)
+    LEFT JOIN biblioitems ON (biblioitems.biblionumber=biblio.biblionumber)
     
 WHERE 
     items.itype = '$itemtype'
@@ -773,7 +794,8 @@ ORDER BY items.dateaccessioned DESC
             borrowernumber => $ill->[7],
             surname => $ill->[8],
             firstname => $ill->[9],
-            ill_id => $ill->[10],
+            series => $ill->[10],
+            ill_id => $ill->[11],
         };        
     }
 
@@ -937,7 +959,8 @@ SELECT DISTINCT
     biblio.author,
     borrowers.borrowernumber,
     borrowers.surname,
-    borrowers.firstname,    
+    borrowers.firstname,
+    CONCAT (biblio.seriestitle, biblioitems.volume),
     CASE
         
         WHEN items.homebranch='$branch_fixed' AND LOCATE ('$branch_fixed-', itemnotes_nonpublic) > 0
@@ -954,6 +977,7 @@ FROM
     LEFT JOIN old_issues ON (old_issues.itemnumber=items.itemnumber)
     LEFT JOIN borrowers ON (borrowers.borrowernumber=old_issues.borrowernumber)
     LEFT JOIN reserves ON (reserves.biblionumber=items.biblionumber)
+    LEFT JOIN biblioitems ON (biblioitems.biblionumber=biblio.biblionumber)
     
 WHERE 
     items.itype = '$itemtype'
@@ -986,7 +1010,8 @@ ORDER BY items.dateaccessioned DESC
             borrowernumber => $ill->[7],
             surname => $ill->[8],
             firstname => $ill->[9],
-            ill_id => $ill->[10],
+            series => $ill->[10],
+            ill_id => $ill->[11],
         };        
     }
 
@@ -1151,7 +1176,8 @@ SELECT
 FROM deletedbiblio
 LEFT JOIN deleteditems USING (biblionumber)
 
-WHERE deleteditems.itype = '$itemtype'
+WHERE 
+  LOCATE ('[FJÄRRLÅN]', deletedbiblio.title) > 0
   AND deleteditems.homebranch = '$branch'
   AND deletedbiblio.title LIKE CONCAT('%', '$search', '%')
 
