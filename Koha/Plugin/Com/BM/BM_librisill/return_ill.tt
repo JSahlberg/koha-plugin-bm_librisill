@@ -54,7 +54,7 @@
                                     <tr>
                                         <td class="ill_dateaccessioned">[% ill.dateaccessioned | html %]</td>
                                         <td class="ill_returndate" style="text-align: center;">[% USE String( ill.returndate ) %][% String.truncate(10) %]</td>
-                                        <td class="ill_title"><a href="/cgi-bin/koha/catalogue/detail.pl?biblionumber=[% ill.biblionumber | html %]" target="_blank">[% ill.title | html %]</a></td>
+                                        <td class="ill_title"><a href="/cgi-bin/koha/catalogue/detail.pl?biblionumber=[% ill.biblionumber | html %]" target="_blank">[% ill.title | html %] [% ill.series %]</a></td>
                                         <td class="ill_author">[% ill.author | html %]</td>
                                         <td class="ill_id"><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill.ill_id | html %]" target="_blank">[% ill.ill_id | html %]</a></td>                                        
                                         <td class="ill_renewals_count" style="text-align: center;">[% ill.renewals_count %]</td>
