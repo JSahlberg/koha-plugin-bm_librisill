@@ -282,7 +282,13 @@
                             </li>
                             <li style="padding-top: 30px;">
                                 <label>Återlämningsdatum:</label>
-                                <input name="duedate" id="checkout_duedate">                                
+                                <input name="duedate" id="checkout_duedate">
+                                <button id="sub1day" type="button" class="btn btn-sm btn-primary" style="min-width:25px;"><i class="fa-solid fa-minus"></i></button>
+                                <button id="add1day" type="button" class="btn btn-sm btn-primary" style="margin-left: 3px;min-width:25px;"><i class="fa-solid fa-plus"></i></button>
+                                <button id="add14days" type="button" class="btn btn-sm btn-primary" style="margin-left: 10px;">14 dagar</button>
+                                <button id="add28days" type="button" class="btn btn-sm btn-primary" style="margin-left: 3px;">28 dagar</button>
+                                <button id="add6months" type="button" class="btn btn-sm btn-primary" style="margin-left: 3px;">6 mån</button>
+                                <button id="add1year" type="button" class="btn btn-sm btn-primary" style="margin-left: 3px;">1 år</button>
                             </li>
 
                         </ol>    
@@ -638,6 +644,63 @@
                 }
             })
 
+            function addDaysToDate(days, dateStr, operator) {
+                let newDate = new Date();
+                if (dateStr) {
+                    newDate = new Date(dateStr);
+                }                
+                if (operator == 'sub') {
+                    newDate.setDate(newDate.getDate() - days);
+                } else {
+                    newDate.setDate(newDate.getDate() + days);
+                }
+                let year = newDate.getFullYear();
+                let month = String(newDate.getMonth() + 1).padStart(2, '0');
+                let day = String(newDate.getDate()).padStart(2, '0');
+                let formattedDate = `${year}-${month}-${day}`;                
+                $('#checkout_duedate').flatpickr({
+                    allowInput: true,
+                    dateFormat: "Y-m-d",
+                    minDate: "today",
+                    defaultDate: formattedDate,
+                    locale: {
+                        firstDayOfWeek: 1,
+                        weekdays: {
+                            shorthand: ['Sön', 'Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör'],
+                            longhand: ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'],
+                        },
+                        months: {
+                            shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'],
+                            longhand: ['Januari', 'Februari', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Augusti', 'September', 'Oktober', 'November', 'December'],
+                        },
+                    },
+                });
+                $('#checkout_duedate_input').val( formattedDate );
+            }
+
+            $('#sub1day').on('click', function() {
+                addDaysToDate(1, $('#checkout_duedate').val() ,'sub');
+            });
+
+            $('#add1day').on('click', function() {
+                addDaysToDate(1, $('#checkout_duedate').val() );
+            });
+            
+            $('#add14days').on('click', function() {
+                addDaysToDate(14);
+            });
+
+            $('#add28days').on('click', function() {
+                addDaysToDate(28);
+            });
+
+            $('#add6months').on('click', function() {
+                addDaysToDate(180);
+            });
+
+            $('#add1year').on('click', function() {
+                addDaysToDate(365);
+            });
 
             [% IF barcode %]
             $('.checkout').each(function() {
