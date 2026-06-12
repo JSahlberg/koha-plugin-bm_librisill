@@ -83,7 +83,13 @@
                                                 [% END %]
                                             [% END %]
                                         [% END %]</td>
-                                        <td style="text-align: center;">[% IF ( ill.borrowernumber ) %]<button class="behandla btn btn-xs btn-primary" data-bs-toggle="modal" data-bs-target="#behandlaModal" ill_id="[% ill.ill_id | html %]" itemnumber="[% ill.itemnumber | html %]" barcode="[% ill.barcode | html %]" itemnotes="[% ill.itemnotes | html %]">Behandla</button>[% ELSE %]<button class="btn btn-xs btn-default" disabled>Behandla</button>[% END %]</td>
+                                        <td style="text-align: center;">
+                                        [% IF ( ill.borrowernumber ) %]
+                                            <button class="behandla btn btn-xs btn-primary" data-bs-toggle="modal" data-bs-target="#behandlaModal" ill_id="[% ill.ill_id | html %]" itemnumber="[% ill.itemnumber | html %]" barcode="[% ill.barcode | html %]" itemnotes="[% ill.itemnotes | html %]">Behandla</button>
+                                        [% ELSE %]
+                                            <button class="btn btn-xs btn-default" disabled>Behandla</button>
+                                        [% END %]
+                                        </td>
                                         <td style="text-align: center;"><button class="delete_ill btn btn-xs btn-danger" biblionumber="[% ill.biblionumber | html %]" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Ta bort</button></td>
                                     </tr>
                                     [% END %]
@@ -217,7 +223,7 @@
                     <fieldset class="rows">
                         <ol>
                             <li>
-                                <label>Låntagare:</label>
+                                <label>Fjärrlånenummer:</label>
                                 <span style="color: green;"><b class="modal_ill_id"></b></span>
                             </li>
                             <li>
@@ -261,10 +267,6 @@
                     <fieldset class="rows">
                         <ol>
                             <li>
-                                <label>Låntagare:</label>
-                                <span style="color: green;"><b class="modal_ill_borrowername"></b></span>
-                            </li>
-                            <li>
                                 <label>Titel:</label>
                                 <span class="modal_title"></span>
                             </li>
@@ -275,6 +277,10 @@
                             <li>
                                 <label>Streckkod:</label>
                                 <span id="modal_barcode" class="ill_barcode"></span>
+                            </li>
+                            <li style="padding-top: 20px;">
+                                <label>Låntagare:</label>
+                                <span class="modal_ill_borrowername"></span>
                             </li>
                             <li style="padding-top: 30px;">
                                 <label>Notering:</label>
