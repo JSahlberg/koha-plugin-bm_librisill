@@ -283,12 +283,14 @@
                             <li style="padding-top: 30px;">
                                 <label>Återlämningsdatum:</label>
                                 <input name="duedate" id="checkout_duedate">
-                                <button id="sub1day" type="button" class="btn btn-sm btn-primary" style="min-width:25px;"><i class="fa-solid fa-minus"></i></button>
-                                <button id="add1day" type="button" class="btn btn-sm btn-primary" style="margin-left: 3px;min-width:25px;"><i class="fa-solid fa-plus"></i></button>
-                                <button id="add14days" type="button" class="btn btn-sm btn-primary" style="margin-left: 10px;">14 dagar</button>
-                                <button id="add28days" type="button" class="btn btn-sm btn-primary" style="margin-left: 3px;">28 dagar</button>
-                                <button id="add6months" type="button" class="btn btn-sm btn-primary" style="margin-left: 3px;">6 mån</button>
-                                <button id="add1year" type="button" class="btn btn-sm btn-primary" style="margin-left: 3px;">1 år</button>
+                                <div style="display: inline;vertical-align: center;">
+                                    <button id="sub1day" type="button" class="btn btn-sm btn-primary" style="min-width:25px;"><i class="fa-solid fa-minus"></i></button>
+                                    <button id="add1day" type="button" class="btn btn-sm btn-primary" style="margin-left: 1px;min-width:25px;"><i class="fa-solid fa-plus"></i></button>
+                                    <button id="add14days" type="button" class="btn btn-sm btn-primary" style="margin-left: 10px;">14 dagar</button>
+                                    <button id="add28days" type="button" class="btn btn-sm btn-primary" style="margin-left: 3px;">28 dagar</button>
+                                    <button id="add6months" type="button" class="btn btn-sm btn-primary" style="margin-left: 3px;">6 mån</button>
+                                    <button id="add1year" type="button" class="btn btn-sm btn-primary" style="margin-left: 3px;">1 år</button>
+                                </div>
                             </li>
 
                         </ol>    
