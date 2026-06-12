@@ -642,7 +642,7 @@
             [% IF barcode %]
             $('.checkout').each(function() {
                 //if ( $(this).attr('barcode') == '[% barcode %]' ) {
-                if ( $(this).closest('tr').find('.ill_title a').text().trim() == '[% barcode %]' ) {
+                if ( $(this).closest('tr').find('.ill_title a').text().includes('[% barcode %]')) {
                     $(this).trigger('click');
                 }
             });
