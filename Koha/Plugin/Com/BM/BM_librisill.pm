@@ -49,7 +49,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.8.7";
+our $VERSION = "0.8.8";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -57,7 +57,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2026-06-10",
+    date_updated    => "2026-06-15",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -1234,6 +1234,33 @@ sub librisill_requests {
         $branch = C4::Context->userenv->{'branch'};
     }
 
+    my $itemtype = $self->retrieve_data('itemtype');
+    my $ccode = $self->retrieve_data('ccode');
+    my $notforloan = $self->retrieve_data('notforloan');
+
+    my $dbh   = C4::Context->dbh;
+
+    my $deletedills = $dbh->selectall_arrayref("
+
+
+SELECT	
+    deleteditems.itemnotes_nonpublic,
+    deleteditems.dateaccessioned
+    
+    
+FROM
+	deleteditems
+    
+    
+WHERE
+	deleteditems.itype = '$itemtype'
+    AND deleteditems.homebranch = '$branch'
+    
+ORDER BY deleteditems.dateaccessioned DESC
+
+    ;");
+
+
     my $time = time();
     my $end = strftime "%F", localtime;
     my $start = strftime "%F", localtime($time-30*24*60*60);
@@ -1250,7 +1277,7 @@ sub librisill_requests {
     my %users;
     my %lf_numbers;
     my %bib_ids;
-    my @usernames = ();
+    my @ill_check = ();
 
     my $ua = new LWP::UserAgent;
     $ua->agent("Perl API Client/1.0");
@@ -1292,6 +1319,24 @@ sub librisill_requests {
         my $ill_requests = $decoded->{ill_requests};
 
         for my $ill ( @$ill_requests ) {
+
+            my $imported = Koha::Items->search( { itemnotes_nonpublic => { -like => '%' . $ill->{lf_number} . '%'} } );
+            
+            warn "Imported: " . $ill->{lf_number} . ' - ' . $imported->count;
+
+            my $importcounter = scalar $imported->count;
+
+            my $deleted = 0;
+
+            if ( $importcounter == 0 ) {
+                for my $deletedill ( @$deletedills ) {
+                    if ( $deletedill->[0] && $deletedill->[0] =~ /$ill->{lf_number}/ ) {
+                        $deleted = 1;
+                        warn "Found in deleted items: " . $ill->{lf_number};
+                        last;
+                    }
+                }
+            }
             
             my $user_id = $ill->{'user_id'};
 
@@ -1314,10 +1359,12 @@ sub librisill_requests {
                 $patron_name = "";            
             };
 
-            push @usernames, {
+            push @ill_check, {
                 lf_number      => $ill->{'lf_number'},
                 borrowernumber => $patron_id,
                 name           => $patron_name,
+                imported       => scalar $imported->count,
+                deleted        => scalar $deleted,                
             }
         }
     }
@@ -1327,7 +1374,7 @@ sub librisill_requests {
         decoded          => $decoded,
         titles           => %titles,
         users            => %users,
-        usernames        => \@usernames,
+        ill_check        => \@ill_check,
         lf_numbers       => %lf_numbers,
         bib_ids          => %bib_ids,
         errormessage     => $errormessage,
