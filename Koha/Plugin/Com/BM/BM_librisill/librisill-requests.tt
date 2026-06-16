@@ -26,6 +26,8 @@
           <div class="row">
             <div class="col-md-10 order-md-2 order-sm-1">
               <h1>Fjärrlån in - Importera från Libris</h3>
+
+              <span style="line-height: 3;">Fjärrlån som ännu inte har importerats från Libris.</span>
               
               [% IF NOT decoded.count < 1 %]
 
@@ -74,7 +76,9 @@
 
               <br>
 
-              <h1>Fjärrlån in - Redan importerade från Libris (inklusive borttagna)</h3>
+              <h1>Fjärrlån in - Importerade från Libris</h3>
+
+              <span style="line-height: 3;">Fjärrlån som har importerats från Libris. Både aktiva samt de som blivit borttagna.</span>
 
               <div class="page-section">
                 <table id="ill_resuests_table" class="dataTable ill_table">
@@ -96,6 +100,7 @@
                           [% uname = check.name %]
                           [% imported = check.imported %]
                           [% deleted = check.deleted %]
+                          [% date = check.date %]
                           [% LAST %]                          
                         [% END %]
                     [% END %]
@@ -112,7 +117,7 @@
                       [% END %]                      
                       </td>
                       <td style="white-space:nowrap">[% IF ill_request.user_id.length > 0 %]<a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% ill_request.user_id %]" target="_blank">[% ill_request.user_id %]</a>[% ELSE %] (ej angivet) [% END  %]</td>
-                      <td style="text-align: center;">[% IF imported > 0 %]<span class="badge text-bg-success">Importerad - Aktiv!</span>[% ELSE %][% IF deleted == 1 %]<span class="badge text-bg-secondary">Importerad - Borttagen</span>[% ELSE %][% END %][% END %]</td>
+                      <td style="text-align: center;">[% IF imported > 0 %]<span class="badge text-bg-success">Aktiv</span><br />[% date %][% ELSE %][% IF deleted == 1 %]<span class="badge text-bg-secondary">Borttagen</span><br />[% date %][% ELSE %][% END %][% END %]</td>
                       <td style="text-align: center;"><a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=librisill_request&lfnumber=[% ill_request.lf_number %]">Behandla</a></td>                      
                     </tr>
                     [% END %]
