@@ -49,7 +49,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.8.7";
+our $VERSION = "0.8.8";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -57,7 +57,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2026-06-10",
+    date_updated    => "2026-06-16",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -1320,6 +1320,9 @@ ORDER BY deleteditems.dateaccessioned DESC
 
         for my $ill ( @$ill_requests ) {
 
+            my $deleted = 0;
+            my $date;
+
             my $imported = Koha::Items->search( { 
                 itemnotes_nonpublic => { -like => '%' . $ill->{lf_number} . '%'},
                 itype => $itemtype,
@@ -1330,12 +1333,14 @@ ORDER BY deleteditems.dateaccessioned DESC
 
             my $importcounter = scalar $imported->count;
 
-            my $deleted = 0;
+            $date = $imported->next->dateaccessioned if $importcounter > 0;
 
+            
             if ( $importcounter == 0 ) {
                 for my $deletedill ( @$deletedills ) {
                     if ( $deletedill->[0] && $deletedill->[0] =~ /$ill->{lf_number}/ ) {
                         $deleted = 1;
+                        $date = $deletedill->[1];
                         warn "Found in deleted items: " . $ill->{lf_number};
                         last;
                     }
@@ -1368,7 +1373,8 @@ ORDER BY deleteditems.dateaccessioned DESC
                 borrowernumber => $patron_id,
                 name           => $patron_name,
                 imported       => scalar $imported->count,
-                deleted        => scalar $deleted,                
+                deleted        => scalar $deleted,
+                date           => $date,                
             }
         }
     }
