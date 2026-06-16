@@ -81,7 +81,7 @@
               <span style="line-height: 3;">Fjärrlån som har importerats från Libris. Både aktiva samt de som blivit borttagna.</span>
 
               <div class="page-section">
-                <table id="ill_resuests_table" class="dataTable ill_table">
+                <table id="ill_resuests_imported_table" class="dataTable ill_table">
                   <thead>
                     <tr>
                       <th>Fjärrlånenummer</th>
@@ -162,7 +162,7 @@
 
     new DataTable('#ill_resuests_table', {
       ordering: true,
-      columnDefs: [{ orderable: false, targets: 4 }],
+      columnDefs: [{ orderable: false, targets: 5 }],
       order: [
         [0, 'desc'],
       ],
@@ -177,7 +177,26 @@
         "topStart" : "search",
         "topEnd" : "pageLength",                
       }
-    });  
+    });
+
+    new DataTable('#ill_resuests_imported_table', {
+      ordering: true,
+      columnDefs: [{ orderable: false, targets: 6 }],
+      order: [
+        [0, 'desc'],
+      ],
+      bAutoWidth: false,
+      pageLength: 25,
+      language: {
+        "search" : "Sök:",
+        "lengthMenu" : "_MENU_ poster per sida",
+        "info" : "Visar _START_ till _END_ av _TOTAL_ poster",
+      },
+      layout: {
+        "topStart" : "search",
+        "topEnd" : "pageLength",                
+      }
+    });
 
     $(document).ready(function() {
       let checkStartpage = localStorage.getItem('startpage');
