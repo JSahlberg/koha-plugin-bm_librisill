@@ -44,6 +44,7 @@
                                         <th>Återlämningsdatum</th>
                                         <th>Omlånad</th>
                                         <th>Utlånande bibliotek</th>
+                                        <th>Notering</th>
                                         <th>Status</th>
                                         <th>Redigera</th>
                                     </tr>
@@ -69,6 +70,7 @@
                                                 [% END %]
                                             [% END %]                                                
                                         [% END %]</td>
+                                        <td class="ill_itemnotes">[% ill.itemnotes | html %]</td>
                                         <td class="ill_status">
                                         [% FOREACH il IN ill_requests %]
                                             [% IF ( il.lf_number == ill.ill_id ) %]
