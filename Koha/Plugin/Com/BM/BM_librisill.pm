@@ -49,7 +49,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.8.9";
+our $VERSION = "0.8.9b";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -57,7 +57,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2026-06-23",
+    date_updated    => "2026-06-25",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -738,6 +738,7 @@ sub checkedout_ILL {
 SELECT DISTINCT 
     items.dateaccessioned,
     items.itemnumber,
+    items.itemnotes,
     issues.date_due,
     issues.renewals_count,
     biblio.biblionumber,
@@ -786,16 +787,17 @@ ORDER BY items.dateaccessioned DESC
         push @ill_mappings, {
             dateaccessioned => $ill->[0],
             itemnumber => $ill->[1],
-            date_due => $ill->[2],
-            renewals_count => $ill->[3],
-            biblionumber => $ill->[4],
-            title => $ill->[5],
-            author => $ill->[6],
-            borrowernumber => $ill->[7],
-            surname => $ill->[8],
-            firstname => $ill->[9],
-            series => $ill->[10],
-            ill_id => $ill->[11],
+            itemnotes => $ill->[2],
+            date_due => $ill->[3],
+            renewals_count => $ill->[4],
+            biblionumber => $ill->[5],
+            title => $ill->[6],
+            author => $ill->[7],
+            borrowernumber => $ill->[8],
+            surname => $ill->[9],
+            firstname => $ill->[10],
+            series => $ill->[11],
+            ill_id => $ill->[12],
         };        
     }
 
