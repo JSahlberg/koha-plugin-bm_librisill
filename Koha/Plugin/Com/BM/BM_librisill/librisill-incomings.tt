@@ -59,7 +59,7 @@
                                             <td class="req_library">
                                             [% FOREACH lib IN ill_libraries %]
                                                 [% IF ill_request.requesting_library == lib.sigel %]
-                                                    <a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% IF lib.length > 1 %][% lib.sigel %][% ELSE %][% lib.searchstr %][% END %]">[% lib.sigel %] - [% lib.libraryname %]</a>
+                                                    <a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% IF lib.length > 1 %][% lib.sigel %][% ELSE %][% lib.searchstr %][% END %]" target="_blank">[% lib.sigel %] - [% lib.libraryname %]</a>
                                                 [% END %]
                                             [% END %]
                                             
@@ -118,7 +118,7 @@
                                             <td class="req_library">
                                             [% FOREACH lib IN ill_libraries %]
                                                 [% IF ill_request.requesting_library == lib.sigel %]
-                                                    <a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% IF lib.length > 1 %][% lib.sigel %][% ELSE %][% lib.searchstr %][% END %]">[% lib.sigel %] - [% lib.libraryname %]</a>
+                                                    <a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% IF lib.length > 1 %][% lib.sigel %][% ELSE %][% lib.searchstr %][% END %]" target="_blank">[% lib.sigel %] - [% lib.libraryname %]</a>
                                                 [% END %]
                                             [% END %]
                                             
