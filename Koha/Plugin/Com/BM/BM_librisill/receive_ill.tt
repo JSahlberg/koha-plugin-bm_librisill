@@ -462,9 +462,12 @@
                             }
                         }, 1000);
                     } else {
+                        if (data.error == 'Duplicate ID') {
+                            data.error = 'Streckkoden finns redan i Koha. Kontrollera att streckkoden är korrekt.';
+                        }
                         $('#behandlaModal .modal-body').html(`
                             <h2>Ej uppdaterad!</h2>
-                            <span>Fel uppstod...</span>
+                            <span style="color: #900;">Fel uppstod: </span><b>${data.error}</b>
                         `);
                         $('#update_ill').remove();
                     }
