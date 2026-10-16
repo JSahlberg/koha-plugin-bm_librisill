@@ -11,6 +11,7 @@ use C4::Auth qw( get_template_and_user );
 use C4::Output qw( output_html_with_http_headers );
 use C4::Biblio qw( AddBiblio ModBiblio DelBiblio );
 use C4::Reserves qw( AddReserve ModReserve);
+use Koha::BackgroundJob::BatchDeleteItem;
 
 use utf8;
 use URI;
@@ -48,7 +49,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.8.5";
+our $VERSION = "0.8.10";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -56,7 +57,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2026-06-02",
+    date_updated    => "2026-10-16",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -128,7 +129,8 @@ sub intranet_js {
                         'background-color': 'white',
                         'padding' : '10px 10px',
                         'border-radius' : '5px',
-                        'border' : '1px solid lightgray'
+                        'border' : '1px solid lightgray',
+                        'max-width' : '600px'
                     });
                     $(this).find('.holddate').css('display', 'block');
                 }               
@@ -252,7 +254,9 @@ sub tool {
     if ($sub eq 'import_ill') {
         my $result = import_ill($self, $query);    
     }
-
+    if ($sub eq 'manual') {
+        my $result = manual($self, $query);    
+    }
 }
 
 
@@ -409,15 +413,19 @@ SELECT DISTINCT
     biblio.author, 
     borrowers.borrowernumber, 
     borrowers.surname, 
-    borrowers.firstname, 
+    borrowers.firstname,
+    reserves.found,
+    branches.branchname,
+    CONCAT (biblio.seriestitle, biblioitems.volume),
     CASE
         
         WHEN items.homebranch='$branch_fixed' AND LOCATE ('$branch_fixed-', itemnotes_nonpublic) > 0
         THEN SUBSTRING(itemnotes_nonpublic, LOCATE ('$branch_fixed-', itemnotes_nonpublic), $ill_id_offset)
-
+    
     ELSE
         NULL
-    END 
+    END
+    
 
 FROM 
     biblio 
@@ -425,8 +433,10 @@ FROM
 JOIN 
     items ON (items.biblionumber=biblio.biblionumber) 
     LEFT JOIN reserves ON (reserves.biblionumber=biblio.biblionumber) 
-    LEFT JOIN borrowers ON (borrowers.borrowernumber=reserves.borrowernumber) 
-
+    LEFT JOIN borrowers ON (borrowers.borrowernumber=reserves.borrowernumber)
+    LEFT JOIN branches ON (branches.branchcode=reserves.branchcode)
+    LEFT JOIN biblioitems ON (biblioitems.biblionumber=biblio.biblionumber)
+    
 WHERE 
     items.itype = '$itemtype'     
     AND items.homebranch = '$branch'    
@@ -458,7 +468,10 @@ ORDER BY items.dateaccessioned DESC
             borrowernumber  => $ill->[5],
             surname  => $ill->[6],
             firstname  => $ill->[7],
-            ill_id => $ill->[8],                
+            status => $ill->[8],
+            branchname => $ill->[9],
+            series => $ill->[10],
+            ill_id => $ill->[11],            
             barcode => $item->barcode,
             itemnotes => $item->itemnotes,
             itemnotes_nonpublic => $item->itemnotes_nonpublic,
@@ -603,18 +616,18 @@ sub save_ILL {
     $item->itemnotes( $itemnotes );
     $item->itemnotes_nonpublic( '+' . $active_library . ' ' . $ill_id );
 
-    $item->notforloan(0)->store;
-
-    $item->store;
-
     my %errhash = (
         error => 0,        
     );
-
-    if ( $item->barcode ne $barcode ) {        
-        $errhash{error} =  1;        
-    } 
-
+    
+    eval { $item->store; };
+    if ($@) {
+        my $error_message = $@->message;
+        $errhash{error} = $error_message;
+    } else {
+        $item->notforloan(0)->store;
+    }    
+    
     my $errorJSON = encode_json( \%errhash );    
     
     my $cgi = CGI->new;
@@ -638,6 +651,8 @@ sub delete_ILL {
         error => 0,
     );
 
+    my $job;
+
     if ( $biblionumber ) {
 
         my $holds = Koha::Holds->search({ biblionumber => $biblionumber });
@@ -648,17 +663,30 @@ sub delete_ILL {
 
         my $items = Koha::Items->search({ biblionumber => $biblionumber });
         my $all_deleted = 1;
-        while ( my $item = $items->next ) {
-            if ($item->itype eq $self->retrieve_data('itemtype') ) {
-                $item->delete;
-            } else {
-                $all_deleted = 0;
+
+        my @itemnumbers = ($itemnumber);
+        
+        $job = Koha::BackgroundJob::BatchDeleteItem->new->enqueue(
+            {
+                record_ids => \@itemnumbers,
+                delete_biblios => 1,
             }
-        }
-        # Delete the record
-        if ($all_deleted) {
-            my $delerror = C4::Biblio::DelBiblio( $biblionumber );
-        }
+        );
+
+        $error{job_id} = $job;
+        
+        
+        #while ( my $item = $items->next ) {
+        #    if ($item->itype eq $self->retrieve_data('itemtype') ) {
+        #        $item->delete;
+        #    } else {
+        #        $all_deleted = 0;
+        #    }
+        #}
+        ## Delete the record
+        #if ($all_deleted) {
+        #    my $delerror = C4::Biblio::DelBiblio( $biblionumber );
+        #}
 
     } else {
         $error{error} = 1;
@@ -710,6 +738,7 @@ sub checkedout_ILL {
 SELECT DISTINCT 
     items.dateaccessioned,
     items.itemnumber,
+    items.itemnotes,
     issues.date_due,
     issues.renewals_count,
     biblio.biblionumber,
@@ -717,7 +746,8 @@ SELECT DISTINCT
     biblio.author,
     borrowers.borrowernumber,
     borrowers.surname,
-    borrowers.firstname,    
+    borrowers.firstname,
+    CONCAT (biblio.seriestitle, biblioitems.volume),
     CASE
         
         WHEN items.homebranch='$branch_fixed' AND LOCATE ('$branch_fixed-', itemnotes_nonpublic) > 0
@@ -732,6 +762,7 @@ FROM
     LEFT JOIN biblio ON (biblio.biblionumber=items.biblionumber)
     LEFT JOIN issues ON (issues.itemnumber=items.itemnumber)
     LEFT JOIN borrowers ON (borrowers.borrowernumber=issues.borrowernumber)
+    LEFT JOIN biblioitems ON (biblioitems.biblionumber=biblio.biblionumber)
     
 WHERE 
     items.itype = '$itemtype'
@@ -756,15 +787,17 @@ ORDER BY items.dateaccessioned DESC
         push @ill_mappings, {
             dateaccessioned => $ill->[0],
             itemnumber => $ill->[1],
-            date_due => $ill->[2],
-            renewals_count => $ill->[3],
-            biblionumber => $ill->[4],
-            title => $ill->[5],
-            author => $ill->[6],
-            borrowernumber => $ill->[7],
-            surname => $ill->[8],
-            firstname => $ill->[9],
-            ill_id => $ill->[10],
+            itemnotes => $ill->[2],
+            date_due => $ill->[3],
+            renewals_count => $ill->[4],
+            biblionumber => $ill->[5],
+            title => $ill->[6],
+            author => $ill->[7],
+            borrowernumber => $ill->[8],
+            surname => $ill->[9],
+            firstname => $ill->[10],
+            series => $ill->[11],
+            ill_id => $ill->[12],
         };        
     }
 
@@ -928,7 +961,8 @@ SELECT DISTINCT
     biblio.author,
     borrowers.borrowernumber,
     borrowers.surname,
-    borrowers.firstname,    
+    borrowers.firstname,
+    CONCAT (biblio.seriestitle, biblioitems.volume),
     CASE
         
         WHEN items.homebranch='$branch_fixed' AND LOCATE ('$branch_fixed-', itemnotes_nonpublic) > 0
@@ -945,6 +979,7 @@ FROM
     LEFT JOIN old_issues ON (old_issues.itemnumber=items.itemnumber)
     LEFT JOIN borrowers ON (borrowers.borrowernumber=old_issues.borrowernumber)
     LEFT JOIN reserves ON (reserves.biblionumber=items.biblionumber)
+    LEFT JOIN biblioitems ON (biblioitems.biblionumber=biblio.biblionumber)
     
 WHERE 
     items.itype = '$itemtype'
@@ -977,7 +1012,8 @@ ORDER BY items.dateaccessioned DESC
             borrowernumber => $ill->[7],
             surname => $ill->[8],
             firstname => $ill->[9],
-            ill_id => $ill->[10],
+            series => $ill->[10],
+            ill_id => $ill->[11],
         };        
     }
 
@@ -1142,7 +1178,8 @@ SELECT
 FROM deletedbiblio
 LEFT JOIN deleteditems USING (biblionumber)
 
-WHERE deleteditems.itype = '$itemtype'
+WHERE 
+  LOCATE ('[FJÄRRLÅN]', deletedbiblio.title) > 0
   AND deleteditems.homebranch = '$branch'
   AND deletedbiblio.title LIKE CONCAT('%', '$search', '%')
 
@@ -1199,6 +1236,33 @@ sub librisill_requests {
         $branch = C4::Context->userenv->{'branch'};
     }
 
+    my $itemtype = $self->retrieve_data('itemtype');
+    my $ccode = $self->retrieve_data('ccode');
+    my $notforloan = $self->retrieve_data('notforloan');
+
+    my $dbh   = C4::Context->dbh;
+
+    my $deletedills = $dbh->selectall_arrayref("
+
+
+SELECT	
+    deleteditems.itemnotes_nonpublic,
+    deleteditems.dateaccessioned
+    
+    
+FROM
+	deleteditems
+    
+    
+WHERE
+	deleteditems.itype = '$itemtype'
+    AND deleteditems.homebranch = '$branch'
+    
+ORDER BY deleteditems.dateaccessioned DESC
+
+    ;");
+
+
     my $time = time();
     my $end = strftime "%F", localtime;
     my $start = strftime "%F", localtime($time-30*24*60*60);
@@ -1215,7 +1279,7 @@ sub librisill_requests {
     my %users;
     my %lf_numbers;
     my %bib_ids;
-    my @usernames = ();
+    my @ill_check = ();
 
     my $ua = new LWP::UserAgent;
     $ua->agent("Perl API Client/1.0");
@@ -1257,6 +1321,33 @@ sub librisill_requests {
         my $ill_requests = $decoded->{ill_requests};
 
         for my $ill ( @$ill_requests ) {
+
+            my $deleted = 0;
+            my $date;
+
+            my $imported = Koha::Items->search( { 
+                itemnotes_nonpublic => { -like => '%' . $ill->{lf_number} . '%'},
+                itype => $itemtype,
+                homebranch => $branch,
+            } );
+            
+            warn "Imported: " . $ill->{lf_number} . ' - ' . $imported->count;
+
+            my $importcounter = scalar $imported->count;
+
+            $date = $imported->next->dateaccessioned if $importcounter > 0;
+
+            
+            if ( $importcounter == 0 ) {
+                for my $deletedill ( @$deletedills ) {
+                    if ( $deletedill->[0] && $deletedill->[0] =~ /$ill->{lf_number}/ ) {
+                        $deleted = 1;
+                        $date = $deletedill->[1];
+                        warn "Found in deleted items: " . $ill->{lf_number};
+                        last;
+                    }
+                }
+            }
             
             my $user_id = $ill->{'user_id'};
 
@@ -1279,10 +1370,13 @@ sub librisill_requests {
                 $patron_name = "";            
             };
 
-            push @usernames, {
+            push @ill_check, {
                 lf_number      => $ill->{'lf_number'},
                 borrowernumber => $patron_id,
                 name           => $patron_name,
+                imported       => scalar $imported->count,
+                deleted        => scalar $deleted,
+                date           => $date,                
             }
         }
     }
@@ -1292,7 +1386,7 @@ sub librisill_requests {
         decoded          => $decoded,
         titles           => %titles,
         users            => %users,
-        usernames        => \@usernames,
+        ill_check        => \@ill_check,
         lf_numbers       => %lf_numbers,
         bib_ids          => %bib_ids,
         errormessage     => $errormessage,
@@ -1894,6 +1988,35 @@ sub _append_to_field {
 
     return $record;
 
+}
+
+sub manual {
+    my ( $self, $args ) = @_;
+
+    my $cgi = $self->{'cgi'};
+
+    #my $query = CGI->new;
+
+    #my ( $template, $loggedinuser, $cookie, $flags ) = get_template_and_user(
+    #    {
+    #        template_name   => $self->mbf_path("manual.tt"),
+    #        query           => $query,
+    #        type            => "intranet",
+    #        authnotrequired => 1,
+    #        flagsrequired   => {}
+    #    }
+    #);
+
+    my $template = $self->get_template({ file => 'manual.tt' });
+
+    $template->param(
+        plugin_dir => $self->bundle_path,
+        
+    );
+
+    $self->output_html( $template->output() );
+
+    ##output_html_with_http_headers $query, $cookie, $template->output;    
 }
 
 1;

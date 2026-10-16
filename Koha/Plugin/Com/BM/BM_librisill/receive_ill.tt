@@ -58,7 +58,7 @@
                                     [% IF (ill.notforloan == notforloan) || (ill.notforloan == '-4') %]
                                     <tr>
                                         <td class="ill_dateaccessioned">[% ill.dateaccessioned | html %]</td>
-                                        <td class="ill_title"><a href="/cgi-bin/koha/catalogue/detail.pl?biblionumber=[% ill.biblionumber | html %]" target="_blank">[% ill.title | html %]</a></td>
+                                        <td class="ill_title"><a href="/cgi-bin/koha/catalogue/detail.pl?biblionumber=[% ill.biblionumber | html %]" target="_blank">[% ill.title | html %] [% ill.series %]</a></td>
                                         <td class="ill_author">[% ill.author | html %]</td>
                                         <td class="ill_id"><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill.ill_id | html %]" target="_blank">[% ill.ill_id | html %]</a></td>
                                         <td class="ill_borrowername">[% IF ( ill.borrowernumber ) %]<a href="/cgi-bin/koha/circ/circulation.pl?borrowernumber=[% ill.borrowernumber | html %]">[% ill.surname | html %], [% ill.firstname | html %][% ELSE %]<span style="color:#900">LÅNTAGARE SAKNAS</span><br /><a href="/cgi-bin/koha/reserve/request.pl?biblionumber=[% ill.biblionumber | html %]">Skapa reservation</a>[% END %]</a></td>
@@ -83,7 +83,13 @@
                                                 [% END %]
                                             [% END %]
                                         [% END %]</td>
-                                        <td style="text-align: center;"><button class="behandla btn btn-xs btn-primary" data-bs-toggle="modal" data-bs-target="#behandlaModal" ill_id="[% ill.ill_id | html %]" itemnumber="[% ill.itemnumber | html %]" barcode="[% ill.barcode | html %]" itemnotes="[% ill.itemnotes | html %]">Behandla</button></td>
+                                        <td style="text-align: center;">
+                                        [% IF ( ill.borrowernumber ) %]
+                                            <button class="behandla btn btn-xs btn-primary" data-bs-toggle="modal" data-bs-target="#behandlaModal" ill_id="[% ill.ill_id | html %]" itemnumber="[% ill.itemnumber | html %]" barcode="[% ill.barcode | html %]" itemnotes="[% ill.itemnotes | html %]">Behandla</button>
+                                        [% ELSE %]
+                                            <button class="btn btn-xs btn-default" disabled>Behandla</button>
+                                        [% END %]
+                                        </td>
                                         <td style="text-align: center;"><button class="delete_ill btn btn-xs btn-danger" biblionumber="[% ill.biblionumber | html %]" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Ta bort</button></td>
                                     </tr>
                                     [% END %]
@@ -124,18 +130,19 @@
                                         <th>Aktivt bibliotek</th>
                                         <th>Streckkod</th>
                                         <th>Lånetid</th>
-                                        <th>Ankomstregistrerad</th>
+                                        <th>Status</th>
+                                        <th>Ankomstregistrerad</th>                                        
                                         <th>Åtgärd</th>
                                     </tr>
                                 </thead>
                                                 
                                 <tbody>
                                 [% FOREACH ill IN ill_mappings %]
-                                    [% IF ill.borrowernumber %]
+                                    [% IF ill.borrowernumber && (ill.status == 'W' || ill.status == 'T')%]
                                     [% IF NOT (ill.notforloan == notforloan) || (ill.notforloan == '-4') %]
                                     <tr>
                                         <td class="ill_dateaccessioned">[% ill.dateaccessioned | html %]</td>
-                                        <td class="ill_title"><a href="/cgi-bin/koha/catalogue/detail.pl?biblionumber=[% ill.biblionumber | html %]" target="_blank">[% ill.title | html %]</a></td>
+                                        <td class="ill_title"><a href="/cgi-bin/koha/catalogue/detail.pl?biblionumber=[% ill.biblionumber | html %]" target="_blank">[% ill.title | html %] [% ill.series %]</a></td>
                                         <td class="ill_author">[% ill.author | html %]</td>
                                         <td class="ill_id"><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill.ill_id | html %]" target="_blank">[% ill.ill_id | html %]</a></td>
                                         <td class="ill_borrowername">[% IF ( ill.borrowernumber ) %]<a href="/cgi-bin/koha/circ/circulation.pl?borrowernumber=[% ill.borrowernumber | html %]">[% ill.surname | html %], [% ill.firstname | html %][% ELSE %]<span style="color:#900">LÅNTAGARE SAKNAS</span><br /><a href="/cgi-bin/koha/reserve/request.pl?biblionumber=[% ill.biblionumber | html %]">Skapa reservation</a>[% END %]</a></td>
@@ -151,15 +158,18 @@
                                         [% END %]</td>
                                         <td class="ill_barcode">[% ill.barcode %]</td>
                                         <td class="ill_duedate">[% ill.itemnotes %]</td>
-                                        <td class="ill_registred">[% ill.datelastseen %]</td>
+                                        <td class="ill_status">[% IF ill.status == 'W' %]<span style="color:green;">Väntar på [% ill.branchname %][% ELSE %]<span style="color:#d00;">Under transport till [% ill.branchname %]</span>[% END %]</td>
+                                        <td class="ill_registred">[% ill.datelastseen %]</td>                                        
                                         <td style="text-align: center;">
-                                            <form method="post" action="/cgi-bin/koha/circ/returns.pl" autocomplete="off">
-                                                <input type="hidden" name="op" value="cud-checkin">
-                                                [% INCLUDE 'csrf-token.inc' %]
-                                                <input type="hidden" name="barcode" value="[% ill.barcode %]">
-                                                <button class="btn btn-xs btn-primary" type="submit">Återlämna</button>
-                                            </form>
-                                            <button class="checkout btn btn-xs btn-success" data-bs-toggle="modal" data-bs-target="#checkoutModal" borrowernumber="[% ill.borrowernumber | html %]" borrowername="[% ill.surname | html %], [% ill.firstname | html %]" barcode="[% ill.barcode | html %]" itemnotes="[% ill.itemnotes | html %]">Låna ut</button>
+                                            <div style="display: inline-flex;">
+                                                <form method="post" action="/cgi-bin/koha/circ/returns.pl" autocomplete="off">
+                                                    <input type="hidden" name="op" value="cud-checkin">
+                                                    [% INCLUDE 'csrf-token.inc' %]
+                                                    <input type="hidden" name="barcode" value="[% ill.barcode %]">
+                                                    <button class="btn btn-xs btn-primary" type="submit">Återlämna</button>
+                                                </form>
+                                                <button class="checkout btn btn-xs btn-success" style="margin: 0 0 0 10px;" data-bs-toggle="modal" data-bs-target="#checkoutModal" borrowernumber="[% ill.borrowernumber | html %]" borrowername="[% ill.surname | html %], [% ill.firstname | html %]" barcode="[% ill.barcode | html %]" itemnotes="[% ill.itemnotes | html %]">Låna ut</button>
+                                            </div>
                                         </td>
                                         <!--<td style="text-align: center;"><button class="delete_ill btn btn-xs btn-danger" biblionumber="[% ill.biblionumber | html %]" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Ta bort</button></td>-->
                                     </tr>
@@ -213,7 +223,7 @@
                     <fieldset class="rows">
                         <ol>
                             <li>
-                                <label>Låntagare:</label>
+                                <label>Fjärrlånenummer:</label>
                                 <span style="color: green;"><b class="modal_ill_id"></b></span>
                             </li>
                             <li>
@@ -257,10 +267,6 @@
                     <fieldset class="rows">
                         <ol>
                             <li>
-                                <label>Låntagare:</label>
-                                <span style="color: green;"><b class="modal_ill_borrowername"></b></span>
-                            </li>
-                            <li>
                                 <label>Titel:</label>
                                 <span class="modal_title"></span>
                             </li>
@@ -272,13 +278,25 @@
                                 <label>Streckkod:</label>
                                 <span id="modal_barcode" class="ill_barcode"></span>
                             </li>
+                            <li style="padding-top: 20px;">
+                                <label>Låntagare:</label>
+                                <span class="modal_ill_borrowername"></span>
+                            </li>
                             <li style="padding-top: 30px;">
                                 <label>Notering:</label>
                                 <span id="reply_notes" class="itemnotes"></span>                                
                             </li>
                             <li style="padding-top: 30px;">
                                 <label>Återlämningsdatum:</label>
-                                <input name="duedate" id="checkout_duedate">                                
+                                <input name="duedate" id="checkout_duedate">
+                                <div style="display: inline;vertical-align: center;">
+                                    <button id="sub1day" type="button" class="btn btn-sm btn-primary" style="min-width:25px;"><i class="fa-solid fa-minus"></i></button>
+                                    <button id="add1day" type="button" class="btn btn-sm btn-primary" style="margin-left: 1px;min-width:25px;"><i class="fa-solid fa-plus"></i></button>
+                                    <button id="add14days" type="button" class="btn btn-sm btn-primary" style="margin-left: 10px;">14 dagar</button>
+                                    <button id="add28days" type="button" class="btn btn-sm btn-primary" style="margin-left: 3px;">28 dagar</button>
+                                    <button id="add6months" type="button" class="btn btn-sm btn-primary" style="margin-left: 3px;">6 mån</button>
+                                    <button id="add1year" type="button" class="btn btn-sm btn-primary" style="margin-left: 3px;">1 år</button>
+                                </div>
                             </li>
 
                         </ol>    
@@ -423,7 +441,7 @@
                         $('#behandlaModal .modal-body').html(`
                             <h2>Uppdaterad!</h2>                            
                         `);
-                        $('#behandlaModal .modal-footer').prepend(`
+                        $('#behandlaModal .modal-footer').html(`
                             <form method="post" action="/cgi-bin/koha/circ/returns.pl" autocomplete="off">
                                 <input type="hidden" name="op" value="cud-checkin">
                                 [% INCLUDE 'csrf-token.inc' %]
@@ -433,10 +451,23 @@
                         `);
                         $('#checkin_ill').focus();
                         $('#update_ill').remove();
+                        var countdown = 3;
+                        var timetoclick = setInterval(function() {
+                            if (countdown > 0) {
+                                $('#checkin_ill').text(`Skriver ut kvitto om (${countdown})`);
+                                countdown--;
+                            } else {
+                                clearInterval(timetoclick);
+                                $('#checkin_ill').trigger('click');                                                                                             
+                            }
+                        }, 1000);
                     } else {
+                        if (data.error == 'Duplicate ID') {
+                            data.error = 'Streckkoden finns redan i Koha. Kontrollera att streckkoden är korrekt.';
+                        }
                         $('#behandlaModal .modal-body').html(`
                             <h2>Ej uppdaterad!</h2>
-                            <span>Fel uppstod...</span>
+                            <span style="color: #900;">Fel uppstod: </span><b>${data.error}</b>
                         `);
                         $('#update_ill').remove();
                     }
@@ -522,6 +553,8 @@
                 var itemnumber = $(this).attr('itemnumber');
                 var borrowernumber = $(this).attr('borrowernumber');
 
+                var this_ill = $(this);
+
                 var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=delete_ILL&biblionumber=${biblionumber}&itemnumber=${itemnumber}&borrowernumber=${borrowernumber}`;
 
                 $.ajax({
@@ -530,8 +563,11 @@
                     cache: true,
                 }).done(function (data) {
                     if ( data.error == '0' ) {                        
-                        console.log('Borttagen!');
-                        window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=receive_ILL';
+                        //console.log('Borttagen!');
+                        //console.log(data);                        
+                        this_ill.closest('tr').children('td').css('opacity', '0.3');                        
+                        this_ill.closest('td').html('Borttagen!');
+                        //window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=receive_ILL';
                     } else {
                         alert('Fel: Gick inte att ta bort.');
                     }
@@ -619,11 +655,68 @@
                 }
             })
 
+            function addDaysToDate(days, dateStr, operator) {
+                let newDate = new Date();
+                if (dateStr) {
+                    newDate = new Date(dateStr);
+                }                
+                if (operator == 'sub') {
+                    newDate.setDate(newDate.getDate() - days);
+                } else {
+                    newDate.setDate(newDate.getDate() + days);
+                }
+                let year = newDate.getFullYear();
+                let month = String(newDate.getMonth() + 1).padStart(2, '0');
+                let day = String(newDate.getDate()).padStart(2, '0');
+                let formattedDate = `${year}-${month}-${day}`;                
+                $('#checkout_duedate').flatpickr({
+                    allowInput: true,
+                    dateFormat: "Y-m-d",
+                    minDate: "today",
+                    defaultDate: formattedDate,
+                    locale: {
+                        firstDayOfWeek: 1,
+                        weekdays: {
+                            shorthand: ['Sön', 'Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör'],
+                            longhand: ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'],
+                        },
+                        months: {
+                            shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'],
+                            longhand: ['Januari', 'Februari', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Augusti', 'September', 'Oktober', 'November', 'December'],
+                        },
+                    },
+                });
+                $('#checkout_duedate_input').val( formattedDate );
+            }
+
+            $('#sub1day').on('click', function() {
+                addDaysToDate(1, $('#checkout_duedate').val() ,'sub');
+            });
+
+            $('#add1day').on('click', function() {
+                addDaysToDate(1, $('#checkout_duedate').val() );
+            });
+            
+            $('#add14days').on('click', function() {
+                addDaysToDate(14);
+            });
+
+            $('#add28days').on('click', function() {
+                addDaysToDate(28);
+            });
+
+            $('#add6months').on('click', function() {
+                addDaysToDate(180);
+            });
+
+            $('#add1year').on('click', function() {
+                addDaysToDate(365);
+            });
 
             [% IF barcode %]
             $('.checkout').each(function() {
                 //if ( $(this).attr('barcode') == '[% barcode %]' ) {
-                if ( $(this).closest('tr').find('.ill_title a').text().trim() == '[% barcode %]' ) {
+                if ( $(this).closest('tr').find('.ill_title a').text().includes('[% barcode %]')) {
                     $(this).trigger('click');
                 }
             });
