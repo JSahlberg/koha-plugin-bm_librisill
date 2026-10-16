@@ -1447,6 +1447,8 @@ sub librisill_request {
 
     my $user_id = $decoded->{ill_requests}->[0]->{user_id};
 
+	$user_id =~ s/^\s+|\s+$//g;
+
     my $patron = Koha::Patrons->find( { cardnumber => $user_id } );
 
     if (!$patron) {
