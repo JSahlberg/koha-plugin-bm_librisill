@@ -49,7 +49,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.8.9b";
+our $VERSION = "0.8.10";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -57,7 +57,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2026-06-25",
+    date_updated    => "2026-10-16",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -616,18 +616,18 @@ sub save_ILL {
     $item->itemnotes( $itemnotes );
     $item->itemnotes_nonpublic( '+' . $active_library . ' ' . $ill_id );
 
-    $item->notforloan(0)->store;
-
-    $item->store;
-
     my %errhash = (
         error => 0,        
     );
-
-    if ( $item->barcode ne $barcode ) {        
-        $errhash{error} =  1;        
-    } 
-
+    
+    eval { $item->store; };
+    if ($@) {
+        my $error_message = $@->message;
+        $errhash{error} = $error_message;
+    } else {
+        $item->notforloan(0)->store;
+    }    
+    
     my $errorJSON = encode_json( \%errhash );    
     
     my $cgi = CGI->new;
