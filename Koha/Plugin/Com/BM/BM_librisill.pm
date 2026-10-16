@@ -1351,6 +1351,8 @@ ORDER BY deleteditems.dateaccessioned DESC
             
             my $user_id = $ill->{'user_id'};
 
+			$user_id =~ s/^\s+|\s+$//g;
+
             my $patron = Koha::Patrons->find( { cardnumber => $user_id } );
 
             if (!$patron) {
