@@ -59,18 +59,24 @@
                                         <td class="ill_id"><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill.ill_id | html %]" target="_blank">[% ill.ill_id | html %]</a></td>                                        
                                         <td class="ill_renewals_count" style="text-align: center;">[% ill.renewals_count %]</td>
                                         <td class="ill_borrowername">[% IF ( ill.borrowernumber ) %]<a href="/cgi-bin/koha/circ/circulation.pl?borrowernumber=[% ill.borrowernumber | html %]">[% ill.surname | html %], [% ill.firstname | html %][% ELSE %]Saknas[% END %]</a></td>
-                                        [% FOREACH il IN ill_requests %]
-                                            [% IF ( il.lf_number == ill.ill_id ) %]
-                                                [% FOREACH lib IN ill_libraries %]
-                                                    [% IF lib.sigel == il.active_library %]
-                                                        <td class="ill_active_library">
-                                                            <a href="https://biblioteksdatabasen.libris.kb.se/library/[% lib.library_id %]/" target="_blank">[% lib.sigel %] - [% lib.libraryname %]</a>
-                                                        </td>
-                                                        <td style="text-align: center;"><button class="adresslapplink btn btn-xs btn-primary" homebranch="[% il.requesting_library %]" sigel="[% lib.sigel %]">Adresslapp</button></td>
+                                        [% IF errormessage %]
+                                            <td class="ill_active_library"></td>
+                                            <td style="text-align: center;"></td>
+                                        [% ELSE %]
+                                            [% FOREACH il IN ill_requests %]
+                                                [% IF ( il.lf_number == ill.ill_id ) %]
+                                                    [% FOREACH lib IN ill_libraries %]
+                                                        [% IF lib.sigel == il.active_library %]
+                                                            <td class="ill_active_library">
+                                                                <a href="https://biblioteksdatabasen.libris.kb.se/library/[% lib.library_id %]/" target="_blank">[% lib.sigel %] - [% lib.libraryname %]</a>
+                                                            </td>
+                                                            <td style="text-align: center;"><button class="adresslapplink btn btn-xs btn-primary" homebranch="[% il.requesting_library %]" sigel="[% lib.sigel %]">Adresslapp</button></td>
+                                                        [% END %]
                                                     [% END %]
-                                                [% END %]
-                                            [% END %]                                                
+                                                [% END %]                                                
+                                            [% END %]
                                         [% END %]
+                                        
                                         
                                         <!-- <td style="text-align: center;"><a class="btn btn-default btn-xs" href="/cgi-bin/koha/cataloguing/additem.pl?op=edititem&biblionumber=[% ill.biblionumber | html %]&itemnumber=[% ill.itemnumber | html %]#edititem" target="_blank">Lägg in</a></td> -->
                                         <td style="text-align: center;"><button class="delete_ill btn btn-xs btn-danger" biblionumber="[% ill.biblionumber | html %]" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Ta bort</button></td>
