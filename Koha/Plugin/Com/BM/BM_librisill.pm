@@ -37,6 +37,8 @@ use Data::Dumper;
 use LWP::UserAgent;
 use MARC::Record;
 
+use Data::Dumper;
+
 use URI::Escape qw(uri_unescape);
 use JSON;
 
@@ -49,7 +51,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.8.11";
+our $VERSION = "0.8.12";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -57,7 +59,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2026-10-16",
+    date_updated    => "2026-10-22",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -345,26 +347,32 @@ sub flstatus {
 
     $request->header( 'api-key' => $libris_key );
 
-    if ($pdf == 1) {
+    my $response = $ua->request($request);
+
+    if ( $response->is_success ) {
+        if ($pdf == 1) {
         
         #$request->header( 'content-type' => 'application/pdf' );
-
-        my $response = $ua->request($request);
-
+    
         #warn "Response: " . $response->content;
 
         #warn "Response: " . $response->content;
         print "Content-Type: application/pdf\n\n";
         print $response->content;
 
+        } else {
+            my $jsonString = $response->content;        
+            return $jsonString;
+        }
     } else {
-        
-        my $response = $ua->request($request);
+        my %err = (
+            error => $response->status_line,
+        );
 
-        my $jsonString = $response->content;        
+        $error = encode_json( \%err );
 
-        return $jsonString;
-    }
+        return $error;        
+    }   
 
 }
 
@@ -1306,9 +1314,19 @@ ORDER BY deleteditems.dateaccessioned DESC
 
         my $response = $ua->request($request);
 
+        if ( $response->is_success ) {
+            warn "Response: " . $response->status_line;
+        } else {            
+            $errormessage = $response->status_line;
+        }
+        
         $jsonString = $response->content;
 
-        $decoded = decode_json($jsonString);
+        eval { $decoded = decode_json($jsonString); };
+        if ($@) {
+            #$errormessage = $response->status_line;
+            
+        }
 
         %lf_numbers = map { $_->{lf_number} } @{ $decoded->{ill_requests} };
 
@@ -1598,7 +1616,11 @@ sub librisill_incomings {
             $orig_data = _get_data_from_libris( $sigil, $libris_key, $fragment);
 
         }
-
+        
+        if ( !$orig_data ) {
+            $errormessage = "Ingen kontakt med Libris.";
+        }
+            
         $decoded = $orig_data;
 
         $ill_requests = $decoded->{'ill_requests'};
@@ -1633,7 +1655,7 @@ sub librisill_incomings {
                 });
             }
         }
-        
+            
     }
 
     $template->param(    
@@ -1673,26 +1695,22 @@ sub _get_data_from_libris {
     my $res = $ua->request($request);
 
     my $json;
+    
     # Check the outcome of the response
     if ($res->is_success) {
         $json = $res->content;
         warn "JSON:" . $json;
+        my $data = decode_json( $json );
+        if ( $data->{'count'} == 0 ) {
+            warn "No data!";
+            # exit;
+        }
+        return $data;
     } else {
         warn $res->status_line;
-    }
-
-    unless ( $json ) {
-        warn "No JSON!";
-        # exit;
-    }
-
-    my $data = decode_json( $json );
-    if ( $data->{'count'} == 0 ) {
-        warn "No data!";
-        # exit;
-    }
-
-    return $data;
+        
+        return;
+    }   
 
 }
 
