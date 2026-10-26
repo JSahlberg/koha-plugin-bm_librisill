@@ -151,7 +151,7 @@
 
                 var this_ill = $(this);
 
-                var url = `/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=delete_ILL&biblionumber=${biblionumber}&itemnumber=${itemnumber}&borrowernumber=${borrowernumber}`;
+                var url = `/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Com::BM::BM_librisill&method=tool&subroutine=delete_ILL&biblionumber=${biblionumber}&itemnumber=${itemnumber}&borrowernumber=${borrowernumber}`;
 
                 $.ajax({
                     url: `${url}`,
@@ -162,7 +162,7 @@
                         console.log('Borttagen!');
                         this_ill.closest('tr').children('td').css('opacity', '0.3');                        
                         this_ill.closest('td').html('Borttagen!');
-                        //window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=return_ILL';
+                        //window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Com::BM::BM_librisill&method=tool&subroutine=return_ILL';
                     } else {
                         alert('Fel: Gick inte att ta bort.');
                     }
