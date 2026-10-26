@@ -12,6 +12,7 @@ use C4::Output qw( output_html_with_http_headers );
 use C4::Biblio qw( AddBiblio ModBiblio DelBiblio );
 use C4::Reserves qw( AddReserve ModReserve);
 use Koha::BackgroundJob::BatchDeleteItem;
+use Koha::BackgroundJobs;
 
 use utf8;
 use URI;
@@ -39,6 +40,7 @@ use MARC::Record;
 
 use Data::Dumper;
 
+
 use URI::Escape qw(uri_unescape);
 use JSON;
 
@@ -51,7 +53,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.8.12";
+our $VERSION = "0.8.13";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -59,7 +61,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2026-10-22",
+    date_updated    => "2026-10-26",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -93,9 +95,9 @@ sub intranet_js {
     var receive_ILL_link;
 
     if (localStartpage) {
-        receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=tool&subroutine=' + localStartpage;
+        receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Com::BM::BM_librisill&method=tool&subroutine=' + localStartpage;
     } else {
-        receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=' + encodeURIComponent("Koha::Plugin::Com::BM::BM_librisill") + '&method=tool&subroutine=| . $startpage . q|';
+        receive_ILL_link = '/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Com::BM::BM_librisill&method=tool&subroutine=| . $startpage . q|';
     }
 
     $(`
@@ -150,8 +152,7 @@ sub configure {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
 
-    my $token = $self->retrieve_data('token');
-
+    my $token      = $self->retrieve_data('token');
     my $itemtype   = $self->retrieve_data('itemtype');
     my $ccode      = $self->retrieve_data('ccode');
     my $notforloan = $self->retrieve_data('notforloan');
@@ -218,47 +219,53 @@ sub tool {
 
     my $query = new CGI;
 
+    my $result;
+
     my $sub = $query->param('subroutine');
 
     if ($sub eq 'flstatus') {
-        my $result = flstatus($self, $query);    
+        $result = flstatus($self, $query);    
     }
-    if ($sub eq 'receive_ILL') {
-        my $result = receive_ILL($self, $query);    
+    elsif ($sub eq 'receive_ILL') {
+        $result = receive_ILL($self, $query);    
     }
-    if ($sub eq 'save_ILL') {
-        my $result = save_ILL($self, $query);    
+    elsif ($sub eq 'save_ILL') {
+        $result = save_ILL($self, $query);    
     }
-    if ($sub eq 'delete_ILL') {
-        my $result = delete_ILL($self, $query);    
+    elsif ($sub eq 'delete_ILL') {
+        $result = delete_ILL($self, $query);    
     }
-    if ($sub eq 'checkedout_ILL') {
-        my $result = checkedout_ILL($self, $query);    
+    elsif ($sub eq 'checkedout_ILL') {
+        $result = checkedout_ILL($self, $query);    
     }
-    if ($sub eq 'return_ILL') {
-        my $result = return_ILL($self, $query);    
+    elsif ($sub eq 'return_ILL') {
+        $result = return_ILL($self, $query);    
     }
-    if ($sub eq 'deleted_ILL') {
-        my $result = deleted_ILL($self, $query);    
+    elsif ($sub eq 'deleted_ILL') {
+        $result = deleted_ILL($self, $query);    
     }
-    if ($sub eq 'librisill_requests') {
-        my $result = librisill_requests($self, $query);    
+    elsif ($sub eq 'librisill_requests') {
+        $result = librisill_requests($self, $query);    
     }
-    if ($sub eq 'librisill_request') {
-        my $result = librisill_request($self, $query);    
+    elsif ($sub eq 'librisill_request') {
+        $result = librisill_request($self, $query);    
     }
-    if ($sub eq 'librisill_incomings') {
-        my $result = librisill_incomings($self, $query);    
+    elsif ($sub eq 'librisill_incomings') {
+        $result = librisill_incomings($self, $query);    
     }
-    if ($sub eq 'getlibdata') {
-        my $result = getlibdata($self, $query);    
+    elsif ($sub eq 'getlibdata') {
+        $result = getlibdata($self, $query);    
     }
-    if ($sub eq 'import_ill') {
-        my $result = import_ill($self, $query);    
+    elsif ($sub eq 'import_ill') {
+        $result = import_ill($self, $query);    
     }
-    if ($sub eq 'manual') {
-        my $result = manual($self, $query);    
+    elsif ($sub eq 'manual') {
+        $result = manual($self, $query);    
     }
+    else {
+        $result = receive_ILL($self, $query);    
+    }
+
 }
 
 
@@ -286,10 +293,18 @@ sub flstatus {
 
     my $query = new CGI;
 
+    my $printjson;
+
     if ($query->param('pdf')) {
         $pdf = $query->param('pdf');
     } else {
         $pdf = 0;
+    }
+
+    if ($query->param('json')) {
+        $printjson = $query->param('json');
+    } else {
+        $printjson = 0;
     }
 
     warn "PDF? : " . $pdf;
@@ -351,14 +366,14 @@ sub flstatus {
 
     if ( $response->is_success ) {
         if ($pdf == 1) {
-        
-        #$request->header( 'content-type' => 'application/pdf' );
-    
-        #warn "Response: " . $response->content;
+                
+            print "Content-Type: application/pdf\n\n";
+            print $response->content;
 
-        #warn "Response: " . $response->content;
-        print "Content-Type: application/pdf\n\n";
-        print $response->content;
+        } elsif ($printjson == 1) {
+            my $jsonString = $response->content;        
+            print "Content-Type: application/json\n\n";
+            print $jsonString;
 
         } else {
             my $jsonString = $response->content;        
@@ -680,26 +695,12 @@ sub delete_ILL {
                 delete_biblios => 1,
             }
         );
-
+        
         $error{job_id} = $job;
-        
-        
-        #while ( my $item = $items->next ) {
-        #    if ($item->itype eq $self->retrieve_data('itemtype') ) {
-        #        $item->delete;
-        #    } else {
-        #        $all_deleted = 0;
-        #    }
-        #}
-        ## Delete the record
-        #if ($all_deleted) {
-        #    my $delerror = C4::Biblio::DelBiblio( $biblionumber );
-        #}
 
     } else {
         $error{error} = 1;
     }
-   
 
     my $errorJSON = encode_json( \%error );
 
@@ -1297,8 +1298,7 @@ ORDER BY deleteditems.dateaccessioned DESC
     my $host="iller.libris.kb.se";
     my $protocol="https";
     my $libris_key = getLibrisKey( $self );
-
-    
+   
 
     if ( !$libris_key ) {
         $errormessage = "API-nyckel saknas för sigel";
@@ -1316,89 +1316,87 @@ ORDER BY deleteditems.dateaccessioned DESC
 
         if ( $response->is_success ) {
             warn "Response: " . $response->status_line;
+
+            $jsonString = $response->content;
+
+            $decoded = decode_json($jsonString);        
+
+            %lf_numbers = map { $_->{lf_number} } @{ $decoded->{ill_requests} };
+
+            %users = map { $_->{user} } @{ $decoded->{ill_requests} };
+
+            %titles = map { $_->{title} } @{ $decoded->{ill_requests} };
+
+            %bib_ids = map { $_->{bib_id} } @{ $decoded->{ill_requests} };
+
+            my $ill_requests = $decoded->{ill_requests};
+
+            for my $ill ( @$ill_requests ) {
+
+                my $deleted = 0;
+                my $date;
+
+                my $imported = Koha::Items->search( { 
+                    itemnotes_nonpublic => { -like => '%' . $ill->{lf_number} . '%'},
+                    itype => $itemtype,
+                    homebranch => $branch,
+                } );
+                
+                warn "Imported: " . $ill->{lf_number} . ' - ' . $imported->count;
+
+                my $importcounter = scalar $imported->count;
+
+                $date = $imported->next->dateaccessioned if $importcounter > 0;
+
+                
+                if ( $importcounter == 0 ) {
+                    for my $deletedill ( @$deletedills ) {
+                        if ( $deletedill->[0] && $deletedill->[0] =~ /$ill->{lf_number}/ ) {
+                            $deleted = 1;
+                            $date = $deletedill->[1];
+                            warn "Found in deleted items: " . $ill->{lf_number};
+                            last;
+                        }
+                    }
+                }
+                
+                my $user_id = $ill->{'user_id'};
+
+                $user_id =~ s/^\s+|\s+$//g;
+
+                my $patron = Koha::Patrons->find( { cardnumber => $user_id } );
+
+                if (!$patron) {
+                    $patron = Koha::Patrons->find( { borrowernumber => $user_id } );
+                }
+
+                my $patron_id = length($patron);
+
+                my $patron_name = length($patron);
+
+                if ($patron) {
+                    $patron_id = $patron->borrowernumber;
+                    $patron_name = $patron->surname . ", " . $patron->firstname;
+                    # warn "Patronname: " . $patron_name;            
+                } else {
+                    $patron_id = "";
+                    $patron_name = "";            
+                };
+
+                push @ill_check, {
+                    lf_number      => $ill->{'lf_number'},                    
+                    borrowernumber => $patron_id,
+                    name           => $patron_name,
+                    imported       => scalar $imported->count,
+                    deleted        => scalar $deleted,
+                    date           => $date,                
+                }
+            }
         } else {            
             $errormessage = $response->status_line;
         }
         
-        $jsonString = $response->content;
-
-        eval { $decoded = decode_json($jsonString); };
-        if ($@) {
-            #$errormessage = $response->status_line;
-            
-        }
-
-        %lf_numbers = map { $_->{lf_number} } @{ $decoded->{ill_requests} };
-
-        %users = map { $_->{user} } @{ $decoded->{ill_requests} };
-
-        %titles = map { $_->{title} } @{ $decoded->{ill_requests} };
-
-        %bib_ids = map { $_->{bib_id} } @{ $decoded->{ill_requests} };
-
-        my $ill_requests = $decoded->{ill_requests};
-
-        for my $ill ( @$ill_requests ) {
-
-            my $deleted = 0;
-            my $date;
-
-            my $imported = Koha::Items->search( { 
-                itemnotes_nonpublic => { -like => '%' . $ill->{lf_number} . '%'},
-                itype => $itemtype,
-                homebranch => $branch,
-            } );
-            
-            warn "Imported: " . $ill->{lf_number} . ' - ' . $imported->count;
-
-            my $importcounter = scalar $imported->count;
-
-            $date = $imported->next->dateaccessioned if $importcounter > 0;
-
-            
-            if ( $importcounter == 0 ) {
-                for my $deletedill ( @$deletedills ) {
-                    if ( $deletedill->[0] && $deletedill->[0] =~ /$ill->{lf_number}/ ) {
-                        $deleted = 1;
-                        $date = $deletedill->[1];
-                        warn "Found in deleted items: " . $ill->{lf_number};
-                        last;
-                    }
-                }
-            }
-            
-            my $user_id = $ill->{'user_id'};
-
-			$user_id =~ s/^\s+|\s+$//g;
-
-            my $patron = Koha::Patrons->find( { cardnumber => $user_id } );
-
-            if (!$patron) {
-                $patron = Koha::Patrons->find( { borrowernumber => $user_id } );
-            }
-
-            my $patron_id = length($patron);
-
-            my $patron_name = length($patron);
-
-            if ($patron) {
-                $patron_id = $patron->borrowernumber;
-                $patron_name = $patron->surname . ", " . $patron->firstname;
-                # warn "Patronname: " . $patron_name;            
-            } else {
-                $patron_id = "";
-                $patron_name = "";            
-            };
-
-            push @ill_check, {
-                lf_number      => $ill->{'lf_number'},
-                borrowernumber => $patron_id,
-                name           => $patron_name,
-                imported       => scalar $imported->count,
-                deleted        => scalar $deleted,
-                date           => $date,                
-            }
-        }
+        
     }
 
     $template->param(
