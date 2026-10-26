@@ -38,6 +38,7 @@
                       <th>Fjärrlånenummer</th>
                       <th>Författare</th>                     
                       <th>Titel</th>
+                      <th>Handläggare</th>
                       <th>Låntagare</th>
                       <th>Kortnummer/ID</th>                      
                       <th>Importera</th>                      
@@ -48,6 +49,7 @@
                     [% FOREACH check IN ill_check %]
                         [% IF check.lf_number == ill_request.lf_number %]
                           [% uname = check.name %]
+                          [% borrowernumber = check.borrowernumber %]
                           [% imported = check.imported %]
                           [% deleted = check.deleted %]
                           [% LAST %]                          
@@ -58,6 +60,7 @@
                       <td><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill_request.lf_number %]" target="_blank">[% ill_request.lf_number %]</a></td>                      
                       <td>[% ill_request.author %]</td>
                       <td>[% ill_request.title %]</td>
+                      <td>[% ill_request.operator %]</td>
                       <td>                      
                       [% IF uname %]
                         <a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% ill_request.user_id %]" target="_blank">[% uname %] </a>
@@ -66,7 +69,10 @@
                       [% END %]                      
                       </td>
                       <td style="white-space:nowrap">[% IF ill_request.user_id.length > 0 %]<a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% ill_request.user_id %]" target="_blank">[% ill_request.user_id %]</a>[% ELSE %] (ej angivet) [% END  %]</td>
-                      <td style="text-align: center;"><a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=librisill_request&lfnumber=[% ill_request.lf_number %]">Behandla</a></td>                      
+                      <!--
+                      <td style="text-align: center;"><a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Com::BM::BM_librisill&method=tool&subroutine=librisill_request&lfnumber=[% ill_request.lf_number %]">Behandla</a></td>                      
+                      -->
+                      <td style="text-align: center;"><a class="import btn btn-xs btn-primary" ill_id="[% ill_request.lf_number%]" bib_id="[% ill_request.bib_id %]" borrowernumber="[% borrowernumber %]" href="#">Importera</a></td>
                     </tr>
                     [% END %]
                     [% END %]
@@ -87,6 +93,7 @@
                       <th>Fjärrlånenummer</th>
                       <th>Författare</th>                     
                       <th>Titel</th>
+                      <th>Handläggare</th>
                       <th>Låntagare</th>
                       <th>Kortnummer/ID</th>
                       <th>Status</th>
@@ -98,6 +105,7 @@
                     [% FOREACH check IN ill_check %]
                         [% IF check.lf_number == ill_request.lf_number %]
                           [% uname = check.name %]
+                          [% borrowernumber = check.borrowernumber %]
                           [% imported = check.imported %]
                           [% deleted = check.deleted %]
                           [% date = check.date %]
@@ -109,6 +117,7 @@
                       <td><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill_request.lf_number %]" target="_blank">[% ill_request.lf_number %]</a></td>                      
                       <td>[% ill_request.author %]</td>
                       <td>[% ill_request.title %]</td>
+                      <td>[% ill_request.operator %]</td>
                       <td>                      
                       [% IF uname %]
                         <a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% ill_request.user_id %]" target="_blank">[% uname %] </a>
@@ -118,7 +127,10 @@
                       </td>
                       <td style="white-space:nowrap">[% IF ill_request.user_id.length > 0 %]<a href="/cgi-bin/koha/circ/circulation.pl?findborrower=[% ill_request.user_id %]" target="_blank">[% ill_request.user_id %]</a>[% ELSE %] (ej angivet) [% END  %]</td>
                       <td style="text-align: center;">[% IF imported > 0 %]<span class="badge text-bg-success">Aktiv</span><br />[% date %][% ELSE %][% IF deleted == 1 %]<span class="badge text-bg-secondary">Borttagen</span><br />[% date %][% ELSE %][% END %][% END %]</td>
-                      <td style="text-align: center;"><a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha%3A%3APlugin%3A%3ACom%3A%3ABM%3A%3ABM_librisill&method=tool&subroutine=librisill_request&lfnumber=[% ill_request.lf_number %]">Behandla</a></td>                      
+                      <!--
+                      <td style="text-align: center;"><a class="btn btn-xs btn-primary" href="/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Com::BM::BM_librisill&method=tool&subroutine=librisill_request&lfnumber=[% ill_request.lf_number %]">Behandla</a></td>                      
+                      -->
+                      <td style="text-align: center;"><a class="import btn btn-xs btn-primary" ill_id="[% ill_request.lf_number%]" bib_id="[% ill_request.bib_id %]" borrowernumber="[% borrowernumber %]" href="#">Importera</a></td>
                     </tr>
                     [% END %]
                     [% END %]
@@ -148,6 +160,26 @@
       </div> <!-- /.col-sm-12 -->
     </div> <!-- /.row -->
 <!-- the main div is closed in intranet-bottom.inc -->
+
+    <div id="importSubmittedModal" class="modal" tabindex="-1" role="dialog" aria-labelledby="importSubmittedModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title" id="importSubmittedModalLabel">Import av post</h1>
+          </div>
+          <div class="modal-body">        
+            <div class="d-flex align-items-center">
+              <strong role="status">Importerar...</strong>
+              <div class="spinner-border ms-auto" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Stäng</button>            
+          </div>
+        </div> <!-- /.modal-content -->
+      </div> <!-- /.modal-dialog -->
+    </div>
+
 
 [% MACRO jsinclude BLOCK %]
   [% SET version = Koha.Version.maintenance %]
@@ -212,6 +244,45 @@
               localStorage.removeItem('startpage');
           }
       })
+    });
+
+
+    $('.import').each(function () {
+      $(this).click(function (event) {
+        event.preventDefault();
+
+        let bib_id = $(this).attr('bib_id');
+        let borrowernumber = $(this).attr('borrowernumber');
+        let ill_id = $(this).attr('ill_id');
+        
+        var url = `/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Com::BM::BM_librisill&method=tool&subroutine=import_ill&bib_id=${bib_id}&borrowernumber=${borrowernumber}&ill_id=${ill_id}`;
+
+        $('#importSubmittedModal').modal('show');
+
+        $.ajax({
+          url: `${url}`,
+          contentType: "application/json;charset=UTF-8",
+          cache: true,
+        }).done(function (data) {
+          if (data.error == 1) {
+            $('#importSubmittedModal .modal-body').html('<p style="color: red;">Import misslyckades...</p>');                  
+          } else {
+            if ( data.no_borrower ) {
+              $('#importSubmittedModal .modal-body').html('<p style="color: green;">Import genomförd!</p><p>Låntagare saknas, ingen reservation gjord.</p>');                  
+              const importmodal = document.getElementById('importSubmittedModal')
+              importmodal.addEventListener('hidden.bs.modal', event => {
+                window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Com::BM::BM_librisill&method=tool&subroutine=receive_ILL';
+              });                  
+            } else {
+              $('#importSubmittedModal .modal-body').html('<p style="color: green;">Import och reservation genomförd!</p>');                  
+              const importmodal = document.getElementById('importSubmittedModal')
+              importmodal.addEventListener('hidden.bs.modal', event => {
+                window.location.href = '/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Com::BM::BM_librisill&method=tool&subroutine=receive_ILL';
+              });                  
+            }                  
+          }
+        });
+      });
     });
 
   </script>
