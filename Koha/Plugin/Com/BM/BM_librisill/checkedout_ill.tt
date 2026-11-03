@@ -71,9 +71,7 @@
                                             [% END %]                                                
                                         [% END %]</td>
                                         <td class="ill_itemnotes">[% ill.itemnotes | html %]</td>
-                                        <td class="ill_barcode" style="text-align: center;">[% ill.barcode | html %]</td>
-                                        
-                                        <!-- <td style="text-align: center;"><a class="btn btn-default btn-xs" href="/cgi-bin/koha/cataloguing/additem.pl?op=edititem&biblionumber=[% ill.biblionumber | html %]&itemnumber=[% ill.itemnumber | html %]#edititem" target="_blank">Lägg in</a></td> -->
+                                        <td class="ill_barcode">[% ill.barcode | html %]</td>
                                         <td style="text-align: center;"><button class="btn btn-xs btn-primary" onclick="window.open('/cgi-bin/koha/cataloguing/additem.pl?op=edititem&biblionumber=[% ill.biblionumber %]&itemnumber=[% ill.itemnumber %]#edititem')">Redigera</button></td>
                                     </tr>                    
                                 [% END %]
@@ -160,7 +158,7 @@
 
         new DataTable('#coill_table', {
             ordering: true,
-            columnDefs: [{ orderable: false, targets: 9 }],
+            columnDefs: [{ orderable: false, targets: 10 }],
             order: [
                 [3, 'desc'],
             ],
