@@ -45,7 +45,7 @@
                                         <th>Omlånad</th>
                                         <th>Utlånande bibliotek</th>
                                         <th>Notering</th>
-                                        <th>Status</th>
+                                        <th>Streckkod</th>
                                         <th>Redigera</th>
                                     </tr>
                                 </thead>
@@ -58,7 +58,7 @@
                                         <td class="ill_author">[% ill.author | html %]</td>
                                         <td class="ill_id"><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill.ill_id | html %]" target="_blank">[% ill.ill_id | html %]</a></td>
                                         <td class="ill_borrowername"><a href="/cgi-bin/koha/circ/circulation.pl?borrowernumber=[% ill.borrowernumber | html %]">[% ill.surname | html %], [% ill.firstname | html %]</a></td>
-                                        <td class="ill_duedate" style="text-align: center;">[% USE String( ill.date_due ) %][% String.truncate(10) %]</td>
+                                        <td class="ill_duedate" style="text-align: center;">[% USE String( ill.date_due ) %][% String.truncate(10) %] <button class="renew btn btn-xs btn-primary" style="margin-left: 10px;" data-bs-toggle="modal" data-bs-target="#renewModal" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Låna om</button></td>
                                         <td class="ill_renewals_count" style="text-align: center;">[% ill.renewals_count %]</td>
                                         <td class="ill_active_library">
                                         [% FOREACH il IN ill_requests %]
@@ -71,17 +71,8 @@
                                             [% END %]                                                
                                         [% END %]</td>
                                         <td class="ill_itemnotes">[% ill.itemnotes | html %]</td>
-                                        <td class="ill_status">
-                                        [% FOREACH il IN ill_requests %]
-                                            [% IF ( il.lf_number == ill.ill_id ) %]
-                                                <b>[% il.local_status | html %]</b> <!--(<span class="active_library">[% il.active_library %]</span>)-->
-                                                [% FOREACH rec IN il.recipients %]
-                                                    [% IF ( rec.is_active_library ) %]
-                                                        [% rec.response_date | html %]
-                                                    [% END %]
-                                                [% END %]
-                                            [% END %]
-                                        [% END %]</td>
+                                        <td class="ill_barcode" style="text-align: center;">[% ill.barcode | html %]</td>
+                                        
                                         <!-- <td style="text-align: center;"><a class="btn btn-default btn-xs" href="/cgi-bin/koha/cataloguing/additem.pl?op=edititem&biblionumber=[% ill.biblionumber | html %]&itemnumber=[% ill.itemnumber | html %]#edititem" target="_blank">Lägg in</a></td> -->
                                         <td style="text-align: center;"><button class="btn btn-xs btn-primary" onclick="window.open('/cgi-bin/koha/cataloguing/additem.pl?op=edititem&biblionumber=[% ill.biblionumber %]&itemnumber=[% ill.itemnumber %]#edititem')">Redigera</button></td>
                                     </tr>                    
@@ -112,6 +103,28 @@
         </div> <!-- /.col-sm-12 -->
     </div> <!-- /.row -->
 
+    <div class="modal  fade" id="renewModal" tabindex="-1" role="dialog" aria-labelledby="renewModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="renewModalLabel">Förnya fjärrlån</h3>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="itemnumber" class="itemnumber" value="">
+                    <input type="hidden" name="borrowernumber" class="borrowernumber" value="">                    
+
+                    <label for="new_duedate">Nytt återlämningsdatum:</label>
+                    <input id="new_duedate" type="date" name="new_duedate" class="new_duedate" value="">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Stäng</button>
+                    <button id="renew_ill" type="button" class="btn btn-primary">Låna om</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 <!-- the main div is closed in intranet-bottom.inc -->
     
 
@@ -123,7 +136,27 @@
     [% END%]
     [% INCLUDE 'datatables.inc' %]    
     [% INCLUDE "$plugin_dir/librisill_js.inc" %]
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
     <script>
+
+        $('#new_duedate').flatpickr({
+            allowInput: true,
+            dateFormat: "Y-m-d",
+            minDate: "today",
+            locale: {
+                firstDayOfWeek: 1,
+                weekdays: {
+                    shorthand: ['Sön', 'Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör'],
+                    longhand: ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'],
+                },
+                months: {
+                    shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'],
+                    longhand: ['Januari', 'Februari', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Augusti', 'September', 'Oktober', 'November', 'December'],
+                },
+            },
+        });
 
         new DataTable('#coill_table', {
             ordering: true,
@@ -143,7 +176,63 @@
                 "topEnd" : "pageLength",                
             }
         });
+
+
+        $('.renew').on('click', function() {
+
+            $('#renewModal .itemnumber').val( $(this).attr('itemnumber') );
+            $('#renewModal .borrowernumber').val( $(this).attr('borrowernumber') );
+            console.log('Itemnumber: ' + $(this).attr('itemnumber') + ', Borrowernumber: ' + $(this).attr('borrowernumber'));  
         
+                    
+        });
+
+        $('#renew_ill').on('click', function(e) {
+            e.preventDefault();
+
+            var itemnumber = $('#renewModal').find('.itemnumber').val();
+            var borrowernumber = $('#renewModal').find('.borrowernumber').val();
+            var new_duedate = $('#renewModal').find('.new_duedate').val();
+
+            var url = `/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Com::BM::BM_librisill&method=tool&subroutine=renew_ILL&itemnumber=${itemnumber}&borrowernumber=${borrowernumber}&datedue=${new_duedate}`;
+        
+            $.ajax({
+                url: `${url}`,
+                contentType: "application/json;charset=UTF-8",
+                cache: true,
+            }).done(function (data) {
+                $('#renewModal .modal-footer').html(`
+                    <button id="reloadButton" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Stäng</button>                        
+                `);
+                $('#reloadButton').on('click', function() {
+                    location.reload();
+                });
+                if ( data.error == '0' ) { 
+                    //alert('Återlämningsdatum uppdaterat till: ' + data.new_date_due);
+                    $('#renewModal .modal-body').html(`
+                        <span>Återlämningsdatum uppdaterat till: ${data.new_date_due}</span>                            
+                    `);                    
+                    //location.reload();
+                } else {
+                    //alert('Fel vid uppdatering av återlämningsdatum: ' + data.error);
+                    $('#renewModal .modal-body').html(`
+                        <span>Fel vid uppdatering av återlämningsdatum: ${data.error}</span>                            
+                    `);
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                //alert('Fel vid uppdatering av återlämningsdatum: ' + textStatus + ' - ' + errorThrown);                    
+                $('#renewModal .modal-body').html(`
+                        <span>Fel vid uppdatering av återlämningsdatum: ${textStatus} - ${errorThrown}</span>                            
+                `);
+                $('#renewModal .modal-footer').html(`
+                    <button id="reloadButton" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Stäng</button>                        
+                `);
+                $('#reloadButton').on('click', function() {
+                    location.reload();
+                });
+            });
+
+        });
 
         $(document).ready(function() {
 

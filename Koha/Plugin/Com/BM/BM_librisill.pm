@@ -11,6 +11,7 @@ use C4::Auth qw( get_template_and_user );
 use C4::Output qw( output_html_with_http_headers );
 use C4::Biblio qw( AddBiblio ModBiblio DelBiblio );
 use C4::Reserves qw( AddReserve ModReserve);
+use C4::Circulation qw( AddRenewal );
 use Koha::BackgroundJob::BatchDeleteItem;
 use Koha::BackgroundJobs;
 
@@ -40,6 +41,7 @@ use MARC::Record;
 
 use Data::Dumper;
 
+use DateTime::Format::Strptime;
 
 use URI::Escape qw(uri_unescape);
 use JSON;
@@ -53,7 +55,7 @@ use warnings;
 
 
 ## Here we set our plugin version
-our $VERSION = "0.8.13";
+our $VERSION = "0.8.14";
 our $MINIMUM_VERSION = "24.11";
 
 ## Here is our metadata, some keys are required, some are optional
@@ -61,7 +63,7 @@ our $metadata = {
     name            => 'BM Libris ILL module',
     author          => 'Johan Sahlberg',
     date_authored   => '2025-09-23',
-    date_updated    => "2026-10-26",
+    date_updated    => "2026-11-03",
     minimum_version => $MINIMUM_VERSION,
     maximum_version => undef,
     version         => $VERSION,
@@ -237,6 +239,9 @@ sub tool {
     }
     elsif ($sub eq 'checkedout_ILL') {
         $result = checkedout_ILL($self, $query);    
+    }
+    elsif ($sub eq 'renew_ILL') {
+        $result = renew_ILL($self, $query);    
     }
     elsif ($sub eq 'return_ILL') {
         $result = return_ILL($self, $query);    
@@ -748,6 +753,7 @@ SELECT DISTINCT
     items.dateaccessioned,
     items.itemnumber,
     items.itemnotes,
+    items.barcode,
     issues.date_due,
     issues.renewals_count,
     biblio.biblionumber,
@@ -797,16 +803,17 @@ ORDER BY items.dateaccessioned DESC
             dateaccessioned => $ill->[0],
             itemnumber => $ill->[1],
             itemnotes => $ill->[2],
-            date_due => $ill->[3],
-            renewals_count => $ill->[4],
-            biblionumber => $ill->[5],
-            title => $ill->[6],
-            author => $ill->[7],
-            borrowernumber => $ill->[8],
-            surname => $ill->[9],
-            firstname => $ill->[10],
-            series => $ill->[11],
-            ill_id => $ill->[12],
+            barcode => $ill->[3],
+            date_due => $ill->[4],
+            renewals_count => $ill->[5],
+            biblionumber => $ill->[6],
+            title => $ill->[7],
+            author => $ill->[8],
+            borrowernumber => $ill->[9],
+            surname => $ill->[10],
+            firstname => $ill->[11],
+            series => $ill->[12],
+            ill_id => $ill->[13],
         };        
     }
 
@@ -926,6 +933,68 @@ ORDER BY items.dateaccessioned DESC
 
     output_html_with_http_headers $query, $cookie, $template->output;    
 }
+
+
+sub renew_ILL {
+    my ( $self, $args ) = @_;
+
+    my $query = CGI->new;
+
+    my $itemnumber = $query->param('itemnumber');
+    my $borrowernumber = $query->param('borrowernumber');
+    my $datedue = $query->param('datedue');
+    my $duedateformated;
+
+    my $format = DateTime::Format::Strptime->new(
+        pattern   => '%Y%m%d',
+        time_zone => 'local',
+        on_error  => 'croak',
+    );
+    
+    if ($datedue) {
+        $datedue =~ s/[^0-9]//g; # Remove any non-numeric characters
+        $duedateformated = $format->parse_datetime($datedue);
+
+    } 
+    
+    my $branch;
+    if (C4::Context->userenv) {
+        $branch = C4::Context->userenv->{'branch'};
+    }
+
+    my %returnhash = (
+        error => 0,
+        new_date_due => 0,        
+    );
+
+    my $new_date_due;
+    
+    eval { $new_date_due = AddRenewal({
+        borrowernumber   => $borrowernumber,
+        itemnumber       => $itemnumber,
+        branch           => $branch,
+        datedue          => $duedateformated,      
+        });
+    };
+
+    my $cgi = CGI->new;
+    print $cgi->header(-type => "application/json", -charset => "utf-8");
+    
+    if ($@) {
+        my $error_message = $@->error;
+        $returnhash{error} = $error_message;
+        my $errorJSON = encode_json( \%returnhash );
+        print $errorJSON;
+    } else {
+        
+        my $successJSON = encode_json( { date_due => $datedue, new_date_due => $new_date_due->ymd, error => 0 } );
+        
+        print $successJSON;       
+        
+    }   
+
+}
+
 
 
 sub return_ILL {
