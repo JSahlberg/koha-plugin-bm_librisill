@@ -58,7 +58,7 @@
                                         <td class="ill_author">[% ill.author | html %]</td>
                                         <td class="ill_id"><a href="http://iller.libris.kb.se/librisfjarrlan/lf.php?action=search&search_string=[% ill.ill_id | html %]" target="_blank">[% ill.ill_id | html %]</a></td>
                                         <td class="ill_borrowername"><a href="/cgi-bin/koha/circ/circulation.pl?borrowernumber=[% ill.borrowernumber | html %]">[% ill.surname | html %], [% ill.firstname | html %]</a></td>
-                                        <td class="ill_duedate" style="text-align: center;">[% USE String( ill.date_due ) %][% String.truncate(10) %] <button class="renew btn btn-xs btn-primary" style="margin-left: 10px;" data-bs-toggle="modal" data-bs-target="#renewModal" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Låna om</button></td>
+                                        <td class="ill_duedate" style="text-align: center; white-space: nowrap;">[% USE String( ill.date_due ) %][% String.truncate(10) %] <button class="renew btn btn-xs btn-primary" style="margin-left: 10px;" data-bs-toggle="modal" data-bs-target="#renewModal" itemnumber="[% ill.itemnumber | html %]" borrowernumber="[% ill.borrowernumber | html %]">Låna om</button></td>
                                         <td class="ill_renewals_count" style="text-align: center;">[% ill.renewals_count %]</td>
                                         <td class="ill_active_library">
                                         [% FOREACH il IN ill_requests %]
@@ -180,7 +180,7 @@
 
             $('#renewModal .itemnumber').val( $(this).attr('itemnumber') );
             $('#renewModal .borrowernumber').val( $(this).attr('borrowernumber') );
-            console.log('Itemnumber: ' + $(this).attr('itemnumber') + ', Borrowernumber: ' + $(this).attr('borrowernumber'));  
+            //console.log('Itemnumber: ' + $(this).attr('itemnumber') + ', Borrowernumber: ' + $(this).attr('borrowernumber'));  
         
                     
         });
